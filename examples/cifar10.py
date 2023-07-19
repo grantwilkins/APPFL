@@ -27,14 +27,15 @@ from torch.utils.data import DataLoader
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="cpu")
+parser.add_argument("--device", type=str, default="mps")
 
 ## dataset and model
 parser.add_argument("--dataset", type=str, default="CIFAR10")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=32)
-parser.add_argument("--model", type=str, default="CNN")
+parser.add_argument("--model", type=str, default="AlexNetCIFAR")
+parser.add_argument("--pretrained", type=int, default=0)
 parser.add_argument("--train_data_batch_size", type=int, default=128)
 parser.add_argument("--test_data_batch_size", type=int, default=128)
 
@@ -122,6 +123,18 @@ def get_data():
                 torch.tensor(train_data_label),
             )
         )
+
+    # After loading the train and test data
+    train_labels = []
+    for dataset in train_datasets:
+        for _, label in dataset:
+            train_labels.append(label.item())  # Append the label to the list
+
+    test_labels = [label.item() for _, label in test_dataset]
+
+    print("Unique train labels:", np.unique(train_labels))
+    print("Unique test labels:", np.unique(test_labels))
+
     return train_datasets, test_dataset
 
 

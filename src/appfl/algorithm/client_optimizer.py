@@ -13,6 +13,9 @@ import numpy as np
 import time
 from appfl.compressor import *
 from appfl.misc import *
+import torch.nn as nn
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class ClientOptim(BaseClient):
@@ -36,8 +39,55 @@ class ClientOptim(BaseClient):
         self.round = 0
         self.compressor = Compressor(self.cfg)
         self.id = id
+        self.std_devs = []
 
         super(ClientOptim, self).client_log_title()
+
+    def magnitude_prune(self, model: nn.Module, prune_ratio: float):
+        """
+        Perform magnitude-based pruning on a PyTorch model.
+
+        Args:
+        model: the PyTorch model to prune.
+        prune_ratio: the percentage of weights to prune in each layer.
+
+        Returns:
+        The pruned model.
+        """
+        # Make a copy of the model
+        model_copy = copy.deepcopy(model)
+        for _, param in model_copy.named_parameters():
+            if param.requires_grad:
+                # Flatten the tensor to 1D for easier percentile calculation
+                param_flattened = param.detach().cpu().numpy().flatten()
+                # Compute the threshold as the (prune_ratio * 100) percentile of the absolute values
+                threshold = np.percentile(np.abs(param_flattened), prune_ratio * 100)
+                # Create a mask that will be True for the weights to keep and False for the weights to prune
+                mask = torch.abs(param) > threshold
+                # Apply the mask
+                param.data.mul_(mask.float())
+        return model_copy
+
+    def pick_error_bound(self, flat_params):
+        """
+        Pick the error bound for the given parameters and standard deviations.
+
+        Args:
+        flat_params: the flattened parameters of the model.
+        std_devs: the per-round standard deviations of the parameters.
+
+        Returns:
+        The error bound to use for the given parameters and standard deviations.
+        """
+        if self.std_devs == []:
+            self.std_devs.append(np.std(flat_params))
+            return np.std(flat_params)
+        min_std = np.min(self.std_devs)
+        if np.std(flat_params) > 4 * min_std:
+            return min_std
+        else:
+            self.std_devs.append(np.std(flat_params))
+            return np.std(flat_params)
 
     def update(self):
         """Inputs for the local model update"""
@@ -118,6 +168,11 @@ class ClientOptim(BaseClient):
                     os.path.join(path, "%s_%s.pt" % (self.round, t)),
                 )
 
+        """
+        Pruning step
+        """
+        if self.cfg.pruning == True:
+            self.model = self.magnitude_prune(self.model, self.cfg.pruning_threshold)
         self.round += 1
 
         self.primal_state = copy.deepcopy(self.model.state_dict())
@@ -127,13 +182,16 @@ class ClientOptim(BaseClient):
         start_time = time.time()
         compression_ratio = 0
         flat_params = utils.flatten_model_params(self.model)
+        chosen_error_bound = self.pick_error_bound(flat_params)
         if self.cfg.compressed_weights_client == True:
-            compressed_weights_client_arr = self.compressor.compress(
-                ori_data=flat_params
+            compressed_weights_client_arr = self.compressor.compress_error_control(
+                ori_data=flat_params,
+                error_bound=chosen_error_bound,
+                error_mode="REL",
             )
             self.cfg.flat_model_size = flat_params.shape
-            compression_ratio = (len(flat_params)) / (
-                len(compressed_weights_client_arr) * 4
+            compression_ratio = (len(flat_params) * 4) / (
+                len(compressed_weights_client_arr)
             )
         compress_time = time.time() - start_time
         stats_file = "stats_" + str(self.id) + ".csv"
@@ -155,7 +213,7 @@ class ClientOptim(BaseClient):
                 + ","
                 + self.cfg.compressor_error_mode
                 + ","
-                + str(self.cfg.compressor_error_bound)
+                + str(chosen_error_bound)
                 + ","
                 + str(flat_params.shape[0])
                 + ","

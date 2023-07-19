@@ -1,0 +1,170 @@
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvg --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.000000 --num_clients 9 --num_epochs 50
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAvgMomentum --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.000000 --num_clients 9 --num_epochs 50
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedYogi --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.000000 --num_clients 9 --num_epochs 50
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdagrad --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.000000 --num_clients 9 --num_epochs 50
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.250000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.200000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.150000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.140000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.130000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.120000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.110000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.100000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.090000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.080000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.070000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.060000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.050000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.040000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.030000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.020000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client
+mpiexec -np 10 python3 ./mnist.py --server ServerFedAdam --error_bound 0.010000 --num_clients 9 --num_epochs 50 --compressed_client --compressed_server

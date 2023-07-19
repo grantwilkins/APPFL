@@ -15,7 +15,6 @@ from .federated_learning_pb2 import Job
 
 class FLOperator:
     def __init__(self, cfg, model, loss_fn, test_dataset, num_clients):
-
         self.logger1 = create_custom_logger(logging.getLogger(__name__), cfg)
         cfg["logginginfo"]["comm_size"] = 1
 
@@ -35,10 +34,7 @@ class FLOperator:
         self.client_training_size = OrderedDict()
         self.client_training_size_received = OrderedDict()
         self.client_weights = OrderedDict()
-        self.client_states = OrderedDict()
-        for c in range(num_clients):
-            self.client_states[c] = OrderedDict()
-            self.client_states[c]["penalty"] = OrderedDict()
+        self.client_states = [OrderedDict() for _ in range(self.num_clients)]
         self.client_learning_status = OrderedDict()
         self.servicer = None  # Takes care of communication via gRPC
 
@@ -137,14 +133,13 @@ class FLOperator:
         self.logger.debug(
             f"[Round: {self.round_number: 04}] self.fed_server.weights: {self.fed_server.weights}"
         )
-        self.fed_server.update([self.client_states])
+        self.fed_server.update(self.client_states)
 
         if self.cfg.validation == True:
             test_loss, accuracy = validation(self.fed_server, self.dataloader)
 
             if accuracy > self.best_accuracy:
                 self.best_accuracy = accuracy
-
             self.logger.info(
                 f"[Round: {self.round_number: 04}] Test set: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%, Best Accuracy: {self.best_accuracy:.2f}%"
             )
@@ -194,6 +189,7 @@ class FLOperator:
             dual_tensors[name] = torch.from_numpy(nparray)
         self.client_states[client_id]["primal"] = primal_tensors
         self.client_states[client_id]["dual"] = dual_tensors
+        self.client_states[client_id]["penalty"] = OrderedDict()
         self.client_states[client_id]["penalty"][client_id] = penalty
         self.client_learning_status[(client_id, round_number)] = True
         self.logger.debug(

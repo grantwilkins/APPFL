@@ -22,14 +22,14 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="cpu")
+parser.add_argument("--device", type=str, default="mps")
 
 ## dataset
 parser.add_argument("--dataset", type=str, default="MNIST")
 parser.add_argument("--num_channel", type=int, default=1)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=28)
-parser.add_argument("--model", type=str, default="CNN")
+parser.add_argument("--model", type=str, default="AlexNetMNIST")
 parser.add_argument("--pretrained", type=int, default=0)
 
 ## algorithm
@@ -41,6 +41,13 @@ parser.add_argument("--num_clients", type=int, default=1)
 parser.add_argument("--client_optimizer", type=str, default="Adam")
 parser.add_argument("--client_lr", type=float, default=1e-3)
 parser.add_argument("--num_local_epochs", type=int, default=1)
+parser.add_argument(
+    "--pruning",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--pruning_threshold", type=float, default=0.01)
 
 ## server
 parser.add_argument("--server", type=str, default="ServerFedAvg")
@@ -144,7 +151,8 @@ def main():
     cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode
-
+    cfg.pruning = args.pruning
+    cfg.pruning_threshold = args.pruning_threshold
     cfg.reproduce = True
     if cfg.reproduce == True:
         set_seed(1)

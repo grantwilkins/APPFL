@@ -126,7 +126,11 @@ def run_server(
         if cfg.compressed_weights_server == True:
             global_state = utils.flatten_model_params(model=server.model)
             original_size = global_state.shape[0]
-            global_state = compressor.compress(ori_data=global_state)
+            global_state = compressor.compress_error_control(
+                ori_data=global_state,
+                error_bound=np.std(global_state),
+                error_mode="REL",
+            )
             server_comp_ratio = original_size / (len(global_state) * 4)
 
         local_update_start = time.time()
@@ -144,7 +148,7 @@ def run_server(
         local_update_time = time.time() - local_update_start
         cfg["logginginfo"]["LocalUpdate_time"] = local_update_time
         ori_shape = utils.flatten_model_params(model=server.model).shape
-        decompress_times = []
+        decompress_times = [0.0 for i in range(num_clients)]
         if cfg.compressed_weights_client == True:
             for local_state in local_states:
                 ori_dtype = eval(cfg.flat_model_dtype)

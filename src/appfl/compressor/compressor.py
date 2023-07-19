@@ -41,6 +41,30 @@ class Compressor:
         else:
             raise NotImplementedError
 
+    def compress_error_control(
+        self, ori_data: np.ndarray, error_bound: float, error_mode: str
+    ):
+        """
+        Compress data with chosen compressor
+        :param ori_data: compressed data, numpy array format
+        :return: decompressed data,numpy array format
+        """
+        if self.cfg.compressor == "SZ3" or "SZ2":
+            self.cfg.flat_model_size = ori_data.shape
+            if self.compressor_class is None:
+                self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            error_mode = self.sz_error_mode_dict[error_mode]
+            compressed_arr, comp_ratio = self.compressor_class.compress(
+                data=ori_data,
+                eb_mode=error_mode,
+                eb_abs=error_bound,
+                eb_rel=error_bound,
+                eb_pwr=error_bound,
+            )
+            return compressed_arr.tobytes()
+        else:
+            raise NotImplementedError
+
     def decompress(
         self, cmp_data, ori_shape: Tuple[int, ...], ori_dtype: np.dtype
     ) -> np.ndarray:

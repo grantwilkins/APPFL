@@ -79,7 +79,11 @@ class FedServer(BaseServer):
             if name in self.list_named_parameters:
                 self.global_state[name] += self.step[name]
             else:
-                tmpsum = torch.zeros_like(self.global_state[name], device=self.device)
+                tmpsum = torch.zeros_like(
+                    self.global_state[name],
+                    device=self.device,
+                    dtype=self.primal_states[0][name].dtype,
+                )
                 for i in range(self.num_clients):
                     tmpsum += self.primal_states[i][name]
                 self.global_state[name] = torch.div(tmpsum, self.num_clients)

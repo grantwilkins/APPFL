@@ -1,3 +1,5 @@
+from typing import OrderedDict
+from collections import OrderedDict
 import torch
 import os
 from omegaconf import DictConfig
@@ -117,50 +119,39 @@ def set_seed(seed=233):
     torch.backends.cudnn.benchmark = False
 
 
-def unflatten_model_params(model, flat_params):
+def unflatten_model_params(model: torch.nn.Module, flat_params: np.ndarray):
     # Convert flat_params to a PyTorch tensor
     flat_params_tensor = torch.from_numpy(flat_params)
 
-    # Get a dictionary of parameter names and shapes from the model's state_dict
-    state_dict = model.state_dict()
-    param_shapes = {name: param.shape for name, param in state_dict.items()}
+    # Make a copy of the model
+    model_copy = copy.deepcopy(model)
 
     # Initialize a pointer variable to 0
     pointer = 0
 
-    # Create a dictionary to hold the unflattened parameters
-    unflattened_params = {}
-
-    # Iterate over the parameters of the model
-    for name, param in model.named_parameters():
+    # Iterate over each parameter in the model
+    for _, param in model_copy.named_parameters():
         # Determine the number of elements in the parameter
         num_elements = param.numel()
 
-        # Slice that number of elements from the flat_params array using the pointer variable
+        # Slice that number of elements from the flat_params_tensor using the pointer variable
         param_slice = flat_params_tensor[pointer : pointer + num_elements]
 
         # Reshape the resulting slice to match the shape of the parameter
-        param_shape = param_shapes[name]
-        param_value = param_slice.view(*param_shape)
+        reshaped_slice = param_slice.view(param.shape)
 
-        # Update the value of the parameter in the model's state_dict
-        state_dict[name] = param_value
-
-        # Add the unflattened parameter to the dictionary
-        unflattened_params[name] = param_value
+        # Assign the reshaped_slice back to the corresponding parameter in the model
+        param.data = reshaped_slice
 
         # Increment the pointer variable by the number of elements used
         pointer += num_elements
 
-    # Load the updated state_dict into the model
-    model.load_state_dict(state_dict)
-
-    # Return the dictionary of unflattened parameters
-    return unflattened_params
+    # Return the state_dict of the modified model
+    return model_copy.state_dict()
 
 
 def flatten_model_params(model: torch.nn.Module) -> np.ndarray:
-    # Concatenate all of the model's parameters into a 1D tensor
-    flat_params = torch.cat([param.view(-1) for param in model.parameters()])
+    # Concatenate all of the tensors in the model's state_dict into a 1D tensor
+    flat_params = torch.cat([param.view(-1) for _, param in model.named_parameters()])
     # Convert the tensor to a numpy array and return it
     return flat_params.detach().cpu().numpy()

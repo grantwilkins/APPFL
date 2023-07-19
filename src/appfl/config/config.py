@@ -15,14 +15,14 @@ class Config:
     fed: Any = field(default_factory=Federated)
 
     # Compute device
-    device: str = "cpu"
-    device_server: str = "cpu"
+    device: str = "mps"
+    device_server: str = "mps"
 
     # Model
-    model: str = "cnn"
+    model: str = "CNN"
 
     # Dataset
-    dataset: str = "mnist"
+    dataset: str = "MNIST"
 
     # Number of training epochs
     num_clients: int = 1
@@ -101,3 +101,5 @@ class Config:
     compressor_error_bound: float = 0.0
     flat_model_size: Tuple[int, ...] = (0,)
     flat_model_dtype: str = "np.float32"
+    pruning: bool = False
+    pruning_threshold: float = 0.01

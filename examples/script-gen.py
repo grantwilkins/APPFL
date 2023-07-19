@@ -4,6 +4,10 @@ error_bounds = [
     0.25,
     0.2,
     0.15,
+    0.14,
+    0.13,
+    0.12,
+    0.11,
     0.1,
     0.09,
     0.08,
@@ -29,11 +33,11 @@ server_algorithms = [
 ]
 
 for server_algorithm in server_algorithms:
+    print(
+        "mpiexec -np %d python3 ./mnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d"
+        % (num_client + 1, server_algorithm, 0.0, num_client, num_epochs)
+    )
     for error_bound in error_bounds:
-        print(
-            "mpiexec -np %d python3 ./mnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d"
-            % (num_client + 1, server_algorithm, error_bound, num_client, num_epochs)
-        )
         print(
             "mpiexec -np %d python3 ./mnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client"
             % (num_client + 1, server_algorithm, error_bound, num_client, num_epochs)
