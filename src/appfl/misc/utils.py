@@ -1,13 +1,15 @@
+from typing import OrderedDict
+from collections import OrderedDict
 import torch
 import os
 from omegaconf import DictConfig
 import logging
 import random
 import numpy as np
+import copy
 
 
 def validation(self, dataloader):
-
     if self.loss_fn is None or dataloader is None:
         return 0.0, 0.0
 
@@ -44,7 +46,6 @@ def validation(self, dataloader):
 
 
 def create_custom_logger(logger, cfg: DictConfig):
-
     dir = cfg.output_dirname
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
@@ -72,7 +73,6 @@ def create_custom_logger(logger, cfg: DictConfig):
 
 
 def client_log(dir, output_filename):
-
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
 
@@ -108,7 +108,7 @@ def save_model_iteration(t, model, cfg: DictConfig):
         uniq += 1
 
     torch.save(model, file)
- 
+
 
 def set_seed(seed=233):
     random.seed(seed)
@@ -117,3 +117,41 @@ def set_seed(seed=233):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+
+def unflatten_model_params(model: torch.nn.Module, flat_params: np.ndarray):
+    # Convert flat_params to a PyTorch tensor
+    flat_params_tensor = torch.from_numpy(flat_params)
+
+    # Make a copy of the model
+    model_copy = copy.deepcopy(model)
+
+    # Initialize a pointer variable to 0
+    pointer = 0
+
+    # Iterate over each parameter in the model
+    for _, param in model_copy.named_parameters():
+        # Determine the number of elements in the parameter
+        num_elements = param.numel()
+
+        # Slice that number of elements from the flat_params_tensor using the pointer variable
+        param_slice = flat_params_tensor[pointer : pointer + num_elements]
+
+        # Reshape the resulting slice to match the shape of the parameter
+        reshaped_slice = param_slice.view(param.shape)
+
+        # Assign the reshaped_slice back to the corresponding parameter in the model
+        param.data = reshaped_slice
+
+        # Increment the pointer variable by the number of elements used
+        pointer += num_elements
+
+    # Return the state_dict of the modified model
+    return model_copy.state_dict()
+
+
+def flatten_model_params(model: torch.nn.Module) -> np.ndarray:
+    # Concatenate all of the tensors in the model's state_dict into a 1D tensor
+    flat_params = torch.cat([param.view(-1) for _, param in model.named_parameters()])
+    # Convert the tensor to a numpy array and return it
+    return flat_params.detach().cpu().numpy()

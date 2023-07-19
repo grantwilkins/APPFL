@@ -11,11 +11,25 @@ import copy
 
 import numpy as np
 import time
+from appfl.compressor import *
+from appfl.misc import *
+import torch.nn as nn
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class ClientOptim(BaseClient):
     def __init__(
-        self, id, weight, model, loss_fn, dataloader, cfg, outfile, test_dataloader, **kwargs
+        self,
+        id,
+        weight,
+        model,
+        loss_fn,
+        dataloader,
+        cfg,
+        outfile,
+        test_dataloader,
+        **kwargs
     ):
         super(ClientOptim, self).__init__(
             id, weight, model, loss_fn, dataloader, cfg, outfile, test_dataloader
@@ -23,20 +37,67 @@ class ClientOptim(BaseClient):
         self.__dict__.update(kwargs)
 
         self.round = 0
+        self.compressor = Compressor(self.cfg)
+        self.id = id
+        self.std_devs = []
 
         super(ClientOptim, self).client_log_title()
 
+    def magnitude_prune(self, model: nn.Module, prune_ratio: float):
+        """
+        Perform magnitude-based pruning on a PyTorch model.
+
+        Args:
+        model: the PyTorch model to prune.
+        prune_ratio: the percentage of weights to prune in each layer.
+
+        Returns:
+        The pruned model.
+        """
+        # Make a copy of the model
+        model_copy = copy.deepcopy(model)
+        for _, param in model_copy.named_parameters():
+            if param.requires_grad:
+                # Flatten the tensor to 1D for easier percentile calculation
+                param_flattened = param.detach().cpu().numpy().flatten()
+                # Compute the threshold as the (prune_ratio * 100) percentile of the absolute values
+                threshold = np.percentile(np.abs(param_flattened), prune_ratio * 100)
+                # Create a mask that will be True for the weights to keep and False for the weights to prune
+                mask = torch.abs(param) > threshold
+                # Apply the mask
+                param.data.mul_(mask.float())
+        return model_copy
+
+    def pick_error_bound(self, flat_params):
+        """
+        Pick the error bound for the given parameters and standard deviations.
+
+        Args:
+        flat_params: the flattened parameters of the model.
+        std_devs: the per-round standard deviations of the parameters.
+
+        Returns:
+        The error bound to use for the given parameters and standard deviations.
+        """
+        if self.std_devs == []:
+            self.std_devs.append(np.std(flat_params))
+            return np.std(flat_params)
+        min_std = np.min(self.std_devs)
+        if np.std(flat_params) > 4 * min_std:
+            return min_std
+        else:
+            self.std_devs.append(np.std(flat_params))
+            return np.std(flat_params)
+
     def update(self):
-        
         """Inputs for the local model update"""
 
         self.model.to(self.cfg.device)
 
         optimizer = eval(self.optim)(self.model.parameters(), **self.optim_args)
- 
 
         """ Multiple local update """
-        start_time=time.time()
+        start_time = time.time()
         ## initial evaluation
         if self.cfg.validation == True and self.test_dataloader != None:
             test_loss, test_accuracy = super(ClientOptim, self).client_validation(
@@ -47,15 +108,15 @@ class ClientOptim(BaseClient):
                 0, per_iter_time, 0, 0, test_loss, test_accuracy
             )
             ## return to train mode
-            self.model.train()        
+            self.model.train()
 
-        ## local training 
+        ## local training
         for t in range(self.num_local_epochs):
-            start_time=time.time()
+            start_time = time.time()
             train_loss = 0
-            train_correct = 0            
+            train_correct = 0
             tmptotal = 0
-            for data, target in self.dataloader:                
+            for data, target in self.dataloader:
                 tmptotal += len(target)
                 data = data.to(self.cfg.device)
                 target = target.to(self.cfg.device)
@@ -64,7 +125,7 @@ class ClientOptim(BaseClient):
                 loss = self.loss_fn(output, target)
                 loss.backward()
                 optimizer.step()
-                
+
                 train_loss += loss.item()
                 if output.shape[1] == 1:
                     pred = torch.round(output)
@@ -87,7 +148,12 @@ class ClientOptim(BaseClient):
                 )
                 per_iter_time = time.time() - start_time
                 super(ClientOptim, self).client_log_content(
-                    t+1, per_iter_time, train_loss, train_accuracy, test_loss, test_accuracy
+                    t + 1,
+                    per_iter_time,
+                    train_loss,
+                    train_accuracy,
+                    test_loss,
+                    test_accuracy,
                 )
                 ## return to train mode
                 self.model.train()
@@ -101,13 +167,59 @@ class ClientOptim(BaseClient):
                     self.model.state_dict(),
                     os.path.join(path, "%s_%s.pt" % (self.round, t)),
                 )
- 
+
+        """
+        Pruning step
+        """
+        if self.cfg.pruning == True:
+            self.model = self.magnitude_prune(self.model, self.cfg.pruning_threshold)
         self.round += 1
 
         self.primal_state = copy.deepcopy(self.model.state_dict())
-        if (self.cfg.device == "cuda"):            
+        if self.cfg.device == "cuda":
             for k in self.primal_state:
                 self.primal_state[k] = self.primal_state[k].cpu()
+        start_time = time.time()
+        compression_ratio = 0
+        flat_params = utils.flatten_model_params(self.model)
+        chosen_error_bound = self.pick_error_bound(flat_params)
+        if self.cfg.compressed_weights_client == True:
+            compressed_weights_client_arr = self.compressor.compress_error_control(
+                ori_data=flat_params,
+                error_bound=chosen_error_bound,
+                error_mode="REL",
+            )
+            self.cfg.flat_model_size = flat_params.shape
+            compression_ratio = (len(flat_params) * 4) / (
+                len(compressed_weights_client_arr)
+            )
+        compress_time = time.time() - start_time
+        stats_file = "stats_" + str(self.id) + ".csv"
+        with open(stats_file, "a") as f:
+            f.write(
+                str(self.cfg.dataset)
+                + ","
+                + str(self.cfg.model)
+                + ","
+                + str(self.id)
+                + ","
+                + str(self.cfg.compressed_weights_client)
+                + ","
+                + str(self.cfg.compressed_weights_server)
+                + ","
+                + str(compression_ratio)
+                + ","
+                + self.cfg.compressor
+                + ","
+                + self.cfg.compressor_error_mode
+                + ","
+                + str(chosen_error_bound)
+                + ","
+                + str(flat_params.shape[0])
+                + ","
+                + str(compress_time)
+                + ","
+            )
 
         """ Differential Privacy  """
         if self.epsilon != False:
@@ -120,9 +232,10 @@ class ClientOptim(BaseClient):
         """ Update local_state """
         self.local_state = OrderedDict()
         self.local_state["primal"] = self.primal_state
+        if self.cfg.compressed_weights_client == True:
+            self.local_state["primal"] = compressed_weights_client_arr
         self.local_state["dual"] = OrderedDict()
         self.local_state["penalty"] = OrderedDict()
         self.local_state["penalty"][self.id] = 0.0
 
         return self.local_state
- 

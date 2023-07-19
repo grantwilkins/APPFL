@@ -145,7 +145,6 @@ class BaseServer:
         return contents
 
     def log_summary(self, cfg: DictConfig, logger):
-
         logger.info("Device=%s" % (cfg.device))
         logger.info("#Processors=%s" % (cfg["logginginfo"]["comm_size"]))
         logger.info("#Clients=%s" % (self.num_clients))
@@ -185,7 +184,6 @@ class BaseClient:
         outfile,
         test_dataloader,
     ):
-
         self.id = id
         self.weight = weight
         self.model = model
@@ -246,7 +244,6 @@ class BaseClient:
         return dual_res
 
     def residual_balancing(self, prim_res, dual_res):
-
         if prim_res > self.residual_balancing.mu * dual_res:
             self.penalty = self.penalty * self.residual_balancing.tau
         if dual_res > self.residual_balancing.mu * prim_res:
@@ -281,7 +278,6 @@ class BaseClient:
         self.outfile.flush()
 
     def client_validation(self, dataloader):
-
         if self.loss_fn is None or dataloader is None:
             return 0.0, 0.0
 
