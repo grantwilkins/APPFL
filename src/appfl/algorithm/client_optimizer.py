@@ -56,6 +56,8 @@ class ClientOptim(BaseClient):
         """
         # Make a copy of the model
         model_copy = copy.deepcopy(model)
+        nonzero_total = 0
+        param_total = 0
         for _, param in model_copy.named_parameters():
             if param.requires_grad:
                 # Flatten the tensor to 1D for easier percentile calculation
@@ -66,6 +68,8 @@ class ClientOptim(BaseClient):
                 mask = torch.abs(param) > threshold
                 # Apply the mask
                 param.data.mul_(mask.float())
+                nonzero_total += torch.count_nonzero(param.data).item()
+                param_total += param.data.numel()
         return model_copy
 
     def pick_error_bound(self, flat_params):
@@ -184,10 +188,8 @@ class ClientOptim(BaseClient):
         flat_params = utils.flatten_model_params(self.model)
         chosen_error_bound = self.pick_error_bound(flat_params)
         if self.cfg.compressed_weights_client == True:
-            compressed_weights_client_arr = self.compressor.compress_error_control(
-                ori_data=flat_params,
-                error_bound=chosen_error_bound,
-                error_mode="REL",
+            compressed_weights_client_arr = self.compressor.compress(
+                ori_data=flat_params
             )
             self.cfg.flat_model_size = flat_params.shape
             compression_ratio = (len(flat_params) * 4) / (

@@ -34,7 +34,7 @@ parser.add_argument("--dataset", type=str, default="CIFAR10")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=32)
-parser.add_argument("--model", type=str, default="AlexNetCIFAR")
+parser.add_argument("--model", type=str, default="CNN")
 parser.add_argument("--pretrained", type=int, default=0)
 parser.add_argument("--train_data_batch_size", type=int, default=128)
 parser.add_argument("--test_data_batch_size", type=int, default=128)
@@ -55,6 +55,31 @@ parser.add_argument("--mparam_1", type=float, required=False)
 parser.add_argument("--mparam_2", type=float, required=False)
 parser.add_argument("--adapt_param", type=float, required=False)
 
+## compression
+parser.add_argument("--error_bound", type=float, required=False, default=0.1)
+# parser.add_argument("--compressed_client", type=bool, required=False, default=False)
+parser.add_argument(
+    "--compressed_client",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "--compressed_server",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--compressor", type=str, required=False, default="SZ3")
+parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
+parser.add_argument(
+    "--pruning",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--pruning_threshold", type=float, default=0.01)
+
 args = parser.parse_args()
 
 args.save_model_state_dict = False
@@ -70,72 +95,29 @@ def get_data():
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
     )
 
-    # test data for a server
-    test_data_raw = eval("torchvision.datasets." + args.dataset)(
-        dir,
-        download=True,
-        train=False,
-        transform=transforms.Compose(
-            [
-                transforms.ToTensor(),
-                normalize,
-            ]
-        ),
+    # Define common transform for train and test data
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            normalize,
+        ]
     )
 
-    test_data_input = []
-    test_data_label = []
-    for idx in range(len(test_data_raw)):
-        test_data_input.append(test_data_raw[idx][0].tolist())
-        test_data_label.append(test_data_raw[idx][1])
-
-    test_dataset = Dataset(
-        torch.FloatTensor(test_data_input), torch.tensor(test_data_label)
+    # Load test data
+    test_dataset = torchvision.datasets.CIFAR10(
+        dir, train=False, download=True, transform=transform
     )
 
-    # training data for multiple clients
-    train_data_raw = eval("torchvision.datasets." + args.dataset)(
-        dir,
-        download=False,
-        train=True,
-        transform=transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomCrop(32, 4),
-                normalize,
-            ]
-        ),
+    # Load train data
+    train_dataset = torchvision.datasets.CIFAR10(
+        dir, train=True, download=True, transform=transform
     )
 
-    split_train_data_raw = np.array_split(range(len(train_data_raw)), args.num_clients)
-    train_datasets = []
-    for i in range(args.num_clients):
-        train_data_input = []
-        train_data_label = []
-        for idx in split_train_data_raw[i]:
-            train_data_input.append(train_data_raw[idx][0].tolist())
-            train_data_label.append(train_data_raw[idx][1])
-
-        train_datasets.append(
-            Dataset(
-                torch.FloatTensor(train_data_input),
-                torch.tensor(train_data_label),
-            )
-        )
-
-    # After loading the train and test data
-    train_labels = []
-    for dataset in train_datasets:
-        for _, label in dataset:
-            train_labels.append(label.item())  # Append the label to the list
-
-    test_labels = [label.item() for _, label in test_dataset]
-
-    print("Unique train labels:", np.unique(train_labels))
-    print("Unique test labels:", np.unique(test_labels))
-
-    return train_datasets, test_dataset
+    # Split train data for multiple clients
+    train_dataset_splits = torch.utils.data.random_split(
+        train_dataset, [len(train_dataset) // args.num_clients] * args.num_clients
+    )
+    return train_dataset_splits, test_dataset
 
 
 ## Run
@@ -153,10 +135,25 @@ def main():
     cfg.device = args.device
     cfg.save_model_state_dict = args.save_model_state_dict
 
+    cfg.compressed_weights_client = args.compressed_client
+    cfg.compressed_weights_server = args.compressed_server
+    cfg.compressor = args.compressor
+    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    cfg.compressor_error_bound = args.error_bound
+    cfg.compressor_error_mode = args.compressor_error_mode
+    cfg.pruning = args.pruning
+    cfg.pruning_threshold = args.pruning_threshold
+
     ## dataset
     cfg.train_data_batch_size = args.train_data_batch_size
     cfg.test_data_batch_size = args.test_data_batch_size
     cfg.train_data_shuffle = True
+
+    ## dataset
+    cfg.dataset = args.dataset
+
+    ## model
+    cfg.model = args.model
 
     ## clients
     cfg.num_clients = args.num_clients

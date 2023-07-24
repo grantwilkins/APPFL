@@ -8,6 +8,8 @@ import appfl.misc.utils as my_utils
 import copy
 from torchvision.models.resnet import BasicBlock, ResNet18_Weights
 from torchvision import *
+from torch.sparse import *
+import zstd
 
 
 class CNN(nn.Module):
@@ -216,11 +218,35 @@ def test_basic_compress(cfg: Config) -> None:
     assert max_diff < cfg.compressor_error_bound
 
 
-def my_flatten_model_params(model: nn.Module) -> np.ndarray:
-    params = {}
-    for name, param in model.state_dict().items():
-        params[name] = param.data.numpy().flatten()
-    return params
+def magnitude_prune(model: nn.Module, prune_ratio: float):
+    """
+    Perform magnitude-based pruning on a PyTorch model.
+
+    Args:
+    model: the PyTorch model to prune.
+    prune_ratio: the percentage of weights to prune in each layer.
+
+    Returns:
+    The pruned model.
+    """
+    # Make a copy of the model
+    model_copy = copy.deepcopy(model)
+    nonzero_total = 0
+    param_total = 0
+    for _, param in model_copy.named_parameters():
+        if param.requires_grad:
+            # Flatten the tensor to 1D for easier percentile calculation
+            param_flattened = param.detach().cpu().numpy().flatten()
+            # Compute the threshold as the (prune_ratio * 100) percentile of the absolute values
+            threshold = np.percentile(np.abs(param_flattened), prune_ratio * 100)
+            # Create a mask that will be True for the weights to keep and False for the weights to prune
+            mask = torch.abs(param) > threshold
+            # Apply the mask
+            param.data.mul_(mask.float())
+            nonzero_total += torch.count_nonzero(param.data).item()
+            param_total += param.data.numel()
+    print(nonzero_total, param_total, nonzero_total / param_total)
+    return model_copy
 
 
 def test_model_compress(cfg: Config) -> None:
@@ -228,27 +254,18 @@ def test_model_compress(cfg: Config) -> None:
     compressor = Compressor(cfg)
     # Define the AlexNetMNIST model
     model = AlexNetMNIST(num_channel=1, num_classes=10, num_pixel=28)
-
-    flat_dict = my_flatten_model_params(model)
-    total_size = 0
-    comp_size = 0
-    for k, v in flat_dict.items():
-        cmpr_arr = compressor.compress(ori_data=v)
-        total_size += len(v)
-        comp_size += len(cmpr_arr)
-        print(k, v.shape, len(cmpr_arr), len(v) * 4 / len(cmpr_arr))
-    print(total_size, comp_size, total_size * 4 / comp_size)
-
     model_copy = copy.deepcopy(model)
+    pruned_model = magnitude_prune(model, 0.5)
 
-    params = my_utils.flatten_model_params(model)
+    params = my_utils.flatten_model_params(pruned_model)
     ori_shape = params.shape
     ori_dtype = params.dtype
-
+    zstd_params = zstd.compress(params.tobytes(), 20)
     # Compress the model
     cmpr_params_bytes = compressor.compress(ori_data=params)
 
-    print(4 * len(params) / len(cmpr_params_bytes))
+    print(4 * len(params) / (len(cmpr_params_bytes)))
+    print(4 * len(params) / (len(zstd_params)))
     # Decompress the model
     dec_params = compressor.decompress(
         cmp_data=cmpr_params_bytes, ori_shape=ori_shape, ori_dtype=ori_dtype
@@ -267,7 +284,7 @@ if __name__ == "__main__":
     # Config setup
     cfg = OmegaConf.structured(Config)
     cfg.compressed_weights_client = True
-    cfg.compressor = "SZ3"
+    cfg.compressor = "Prune"
     cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
     # cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
     cfg.compressor_error_bound = 0.1

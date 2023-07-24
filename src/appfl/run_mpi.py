@@ -165,9 +165,14 @@ def run_server(
                 )
                 local_state["primal"] = new_state_dic
         # print("Start Server Update")
+
         global_update_start = time.time()
         server.update(local_states)
         global_update_time = time.time() - global_update_start
+        if (t + 1) % 10 == 0:
+            weights = flatten_model_params(model=server.model)
+            file_name = "weights_" + str(t + 1) + ".txt"
+            np.savetxt(file_name, weights)
         cfg["logginginfo"]["GlobalUpdate_time"] = global_update_time
         validation_start = time.time()
         if cfg.validation == True:

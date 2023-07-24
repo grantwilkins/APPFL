@@ -2,6 +2,7 @@ from . import pysz
 from ..config import Config
 from typing import Tuple, Any
 import numpy as np
+import pickle
 
 
 class Compressor:
@@ -24,7 +25,7 @@ class Compressor:
         :param ori_data: compressed data, numpy array format
         :return: decompressed data,numpy array format
         """
-        if self.cfg.compressor == "SZ3" or "SZ2":
+        if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
             self.cfg.flat_model_size = ori_data.shape
             if self.compressor_class is None:
                 self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
@@ -38,6 +39,35 @@ class Compressor:
                 eb_pwr=error_bound,
             )
             return compressed_arr.tobytes()
+        elif self.cfg.compressor == "Prune":
+            k = len(ori_data)
+            data = np.zeros(k, dtype="float32")
+            index = np.zeros(k, dtype="uint8")
+
+            k = 0
+            kk = 0
+            bit = 0
+
+            for i in range(len(ori_data)):
+                if (bit == 255) and (ori_data[i] == 0):
+                    index[k] = 0
+                    k = k + 1
+                    bit = 0
+                if ori_data[i] != 0:
+                    data[kk] = ori_data[i]
+                    index[k] = bit
+                    k = k + 1
+                    kk = kk + 1
+                    bit = 0
+                bit = bit + 1
+            a = np.zeros(kk, dtype="float32")
+            b = np.zeros(k, dtype="uint8")
+            for i in range(kk):
+                a[i] = data[i]
+            for i in range(k):
+                b[i] = index[i]
+            dict_weights = {"weights": a, "idx": b}
+            return pickle.dumps(dict_weights)
         else:
             raise NotImplementedError
 
@@ -75,7 +105,7 @@ class Compressor:
         :param ori_dtype: the dtype of original data
         :return: decompressed data,numpy array format
         """
-        if self.cfg.compressor == "SZ3" or "SZ2":
+        if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
             if self.compressor_class is None:
                 self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
             cmp_data = np.frombuffer(cmp_data, dtype=np.uint8)
@@ -85,6 +115,21 @@ class Compressor:
                 original_dtype=ori_dtype,
             )
             return decompressed_arr
+        elif self.cfg.compressor == "Prune":
+            data_dict = pickle.loads(cmp_data)
+            index = data_dict["idx"]
+            weights = data_dict["weights"]
+            data = np.zeros(ori_shape, dtype=ori_dtype)
+            k = 0
+            q = 0
+            for j in range(len(index)):
+                if (index[j] == 0) and (j != 0):
+                    k = k + 255
+                else:
+                    k = k + index[j]
+                    data[k] = weights[q]
+                    q = q + 1
+            return data
         else:
             raise NotImplementedError
 

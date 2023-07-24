@@ -3,9 +3,10 @@ import time
 
 import numpy as np
 import torch
+from torch.utils.data import Subset
 
 import torchvision
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Normalize, Compose
 
 from appfl.config import *
 from appfl.misc.data import *
@@ -41,13 +42,6 @@ parser.add_argument("--num_clients", type=int, default=1)
 parser.add_argument("--client_optimizer", type=str, default="Adam")
 parser.add_argument("--client_lr", type=float, default=1e-3)
 parser.add_argument("--num_local_epochs", type=int, default=1)
-parser.add_argument(
-    "--pruning",
-    action=argparse.BooleanOptionalAction,
-    required=False,
-    default=False,
-)
-parser.add_argument("--pruning_threshold", type=float, default=0.01)
 
 ## server
 parser.add_argument("--server", type=str, default="ServerFedAvg")
@@ -75,6 +69,13 @@ parser.add_argument(
 )
 parser.add_argument("--compressor", type=str, required=False, default="SZ3")
 parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
+parser.add_argument(
+    "--pruning",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--pruning_threshold", type=float, default=0.01)
 
 
 args = parser.parse_args()
@@ -83,55 +84,49 @@ if torch.cuda.is_available():
     args.device = "cuda"
 
 
+def create_dataset(data_raw):
+    data_input = [x[0] for x in data_raw]
+    data_label = [x[1] for x in data_raw]
+    return Dataset(torch.stack(data_input), torch.tensor(data_label))
+
+
 def get_data(comm: MPI.Comm):
     dir = os.getcwd() + "/datasets/RawData"
-
     comm_rank = comm.Get_rank()
+
+    transform = Compose(
+        [
+            ToTensor(),
+            Normalize((0.1307,), (0.3081,)),  # MNIST normalization parameters
+        ]
+    )
 
     # Root download the data if not already available.
     if comm_rank == 0:
         # test data for a server
-        test_data_raw = eval("torchvision.datasets." + args.dataset)(
-            dir, download=True, train=False, transform=ToTensor()
+        test_data_raw = torchvision.datasets.MNIST(
+            dir, download=True, train=False, transform=transform
         )
-
     comm.Barrier()
     if comm_rank > 0:
         # test data for a server
-        test_data_raw = eval("torchvision.datasets." + args.dataset)(
-            dir, download=False, train=False, transform=ToTensor()
+        test_data_raw = torchvision.datasets.MNIST(
+            dir, download=False, train=False, transform=transform
         )
 
-    test_data_input = []
-    test_data_label = []
-    for idx in range(len(test_data_raw)):
-        test_data_input.append(test_data_raw[idx][0].tolist())
-        test_data_label.append(test_data_raw[idx][1])
-
-    test_dataset = Dataset(
-        torch.FloatTensor(test_data_input), torch.tensor(test_data_label)
-    )
+    test_dataset = create_dataset(test_data_raw)
 
     # training data for multiple clients
-    train_data_raw = eval("torchvision.datasets." + args.dataset)(
-        dir, download=False, train=True, transform=ToTensor()
+    train_data_raw = torchvision.datasets.MNIST(
+        dir, download=False, train=True, transform=transform
     )
 
-    split_train_data_raw = np.array_split(range(len(train_data_raw)), args.num_clients)
+    indices = np.array_split(range(len(train_data_raw)), args.num_clients)
     train_datasets = []
     for i in range(args.num_clients):
-        train_data_input = []
-        train_data_label = []
-        for idx in split_train_data_raw[i]:
-            train_data_input.append(train_data_raw[idx][0].tolist())
-            train_data_label.append(train_data_raw[idx][1])
+        subset_data_raw = Subset(train_data_raw, indices[i])
+        train_datasets.append(create_dataset(subset_data_raw))
 
-        train_datasets.append(
-            Dataset(
-                torch.FloatTensor(train_data_input),
-                torch.tensor(train_data_label),
-            )
-        )
     return train_datasets, test_dataset
 
 

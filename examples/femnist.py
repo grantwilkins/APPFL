@@ -19,7 +19,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="cpu")
+parser.add_argument("--device", type=str, default="mps")
 
 ## dataset
 parser.add_argument("--dataset", type=str, default="FEMNIST")
@@ -29,7 +29,9 @@ parser.add_argument("--num_pixel", type=int, default=28)
 parser.add_argument("--model", type=str, default="CNN")
 
 ## algorithm
-parser.add_argument("--federation_type", type=str, default="Federated")  ## Federated, ICEADMM, IIADMM
+parser.add_argument(
+    "--federation_type", type=str, default="Federated"
+)  ## Federated, ICEADMM, IIADMM
 ## clients
 parser.add_argument("--num_clients", type=int, default=1)
 parser.add_argument("--client_optimizer", type=str, default="Adam")
@@ -38,7 +40,7 @@ parser.add_argument("--num_local_epochs", type=int, default=1)
 
 ## server
 parser.add_argument("--server", type=str, default="ServerFedAvg")
-parser.add_argument("--num_epochs", type=int, default=2)
+parser.add_argument("--num_epochs", type=int, default=50)
 
 parser.add_argument("--server_lr", type=float, required=False)
 parser.add_argument("--mparam_1", type=float, required=False)
@@ -46,6 +48,31 @@ parser.add_argument("--mparam_2", type=float, required=False)
 parser.add_argument("--adapt_param", type=float, required=False)
 
 parser.add_argument("--pretrained", type=int, default=0)
+
+## compression
+parser.add_argument("--error_bound", type=float, required=False, default=0.1)
+# parser.add_argument("--compressed_client", type=bool, required=False, default=False)
+parser.add_argument(
+    "--compressed_client",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument(
+    "--compressed_server",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--compressor", type=str, required=False, default="SZ3")
+parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
+parser.add_argument(
+    "--pruning",
+    action=argparse.BooleanOptionalAction,
+    required=False,
+    default=False,
+)
+parser.add_argument("--pruning_threshold", type=float, default=0.001)
 
 args = parser.parse_args()
 
@@ -63,7 +90,7 @@ def get_data(comm: MPI.Comm):
     test_data_input = []
     test_data_label = []
     for idx in range(36):
-        with open("%s/test/all_data_%s_niid_05_keep_0_test_9.json" % (dir, idx)) as f:
+        with open("%s/test/all_data_%s_niid_05_test_9.json" % (dir, idx)) as f:
             test_data_raw[idx] = json.load(f)
         for client in test_data_raw[idx]["users"]:
             for data_input in test_data_raw[idx]["user_data"][client]["x"]:
@@ -84,8 +111,14 @@ def get_data(comm: MPI.Comm):
     # training data for multiple clients
     train_data_raw = {}
     train_datasets = []
-    for idx in range(36):
-        with open("%s/train/all_data_%s_niid_05_keep_0_train_9.json" % (dir, idx)) as f:
+    num_clients = comm.Get_size()
+    client_id = comm.Get_rank()
+    files_per_client = 36 // num_clients
+    start_file_id = client_id * files_per_client
+    end_file_id = start_file_id + files_per_client
+
+    for idx in range(start_file_id, end_file_id):
+        with open("%s/train/all_data_%s_niid_05_train_9.json" % (dir, idx)) as f:
             train_data_raw[idx] = json.load(f)
 
         for client in train_data_raw[idx]["users"]:
@@ -122,15 +155,26 @@ def main():
     if cfg.reproduce == True:
         set_seed(1)
 
+    cfg.compressed_weights_client = args.compressed_client
+    cfg.compressed_weights_server = args.compressed_server
+    cfg.compressor = args.compressor
+    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    cfg.compressor_error_bound = args.error_bound
+    cfg.compressor_error_mode = args.compressor_error_mode
+    cfg.pruning = args.pruning
+    cfg.pruning_threshold = args.pruning_threshold
     start_time = time.time()
+
     train_datasets, test_dataset = get_data(comm)
+
+    cfg.dataset = args.dataset
+    cfg.model = args.model
 
     if cfg.data_sanity == True:
         data_sanity_check(
             train_datasets, test_dataset, args.num_channel, args.num_pixel
         )
 
-    args.num_clients = len(train_datasets)
     model = get_model(args)
     loss_fn = torch.nn.CrossEntropyLoss()
     print(
@@ -143,7 +187,7 @@ def main():
     cfg.num_clients = args.num_clients
     cfg.num_epochs = args.num_epochs
 
-    cfg.fed = eval(args.federation_type+"()")
+    cfg.fed = eval(args.federation_type + "()")
     if args.federation_type == "Federated":
         cfg.fed.args.optim = args.client_optimizer
         cfg.fed.args.optim_args.lr = args.client_lr
@@ -156,10 +200,24 @@ def main():
     if comm_size > 1:
         if comm_rank == 0:
             rm.run_server(
-                cfg, comm, model, loss_fn, args.num_clients, test_dataset, args.dataset
+                cfg=cfg,
+                comm=comm,
+                model=model,
+                loss_fn=loss_fn,
+                num_clients=args.num_clients,
+                test_dataset=test_dataset,
+                dataset_name=args.dataset,
             )
         else:
-            rm.run_client(cfg, comm, model, loss_fn, args.num_clients, train_datasets)
+            rm.run_client(
+                cfg=cfg,
+                comm=comm,
+                model=model,
+                loss_fn=loss_fn,
+                num_clients=args.num_clients,
+                train_data=train_datasets,
+                test_data=test_dataset,
+            )
         print("------DONE------", comm_rank)
     else:
         rs.run_serial(cfg, model, loss_fn, train_datasets, test_dataset, args.dataset)
