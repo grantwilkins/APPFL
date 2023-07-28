@@ -121,7 +121,7 @@ def set_seed(seed=233):
 
 def unflatten_model_params(model: torch.nn.Module, flat_params: np.ndarray):
     # Convert flat_params to a PyTorch tensor
-    flat_params_tensor = torch.from_numpy(flat_params)
+    flat_params_tensor = torch.from_numpy(flat_params).float()
 
     # Make a copy of the model
     model_copy = copy.deepcopy(model)
@@ -153,5 +153,12 @@ def unflatten_model_params(model: torch.nn.Module, flat_params: np.ndarray):
 def flatten_model_params(model: torch.nn.Module) -> np.ndarray:
     # Concatenate all of the tensors in the model's state_dict into a 1D tensor
     flat_params = torch.cat([param.view(-1) for _, param in model.named_parameters()])
+    # Convert the tensor to a numpy array and return it
+    return flat_params.detach().cpu().numpy()
+
+
+def flatten_primal_or_dual(primal_or_dual: OrderedDict) -> np.ndarray:
+    # Concatenate all of the tensors in the model's state_dict into a 1D tensor
+    flat_params = torch.cat([param.view(-1) for _, param in primal_or_dual.items()])
     # Convert the tensor to a numpy array and return it
     return flat_params.detach().cpu().numpy()

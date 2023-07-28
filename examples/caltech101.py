@@ -30,7 +30,7 @@ parser.add_argument("--dataset", type=str, default="Caltech101")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=101)
 parser.add_argument("--num_pixel", type=int, default=224)
-parser.add_argument("--model", type=str, default="CNN")
+parser.add_argument("--model", type=str, default="AlexNetCaltech")
 parser.add_argument("--pretrained", type=int, default=0)
 
 ## algorithm
@@ -75,7 +75,7 @@ parser.add_argument(
     required=False,
     default=False,
 )
-parser.add_argument("--pruning_threshold", type=float, default=0.01)
+parser.add_argument("--pruning_threshold", type=float, default=0.5)
 
 
 args = parser.parse_args()
@@ -110,10 +110,14 @@ def get_data():
         dir, download=True, transform=transform
     )
 
-    # Split train data for multiple clients
-    train_dataset_splits = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // args.num_clients] * args.num_clients
-    )
+    n = len(train_dataset)
+    m = args.num_clients
+    quot, rem = divmod(n, m)
+
+    sizes = [quot + 1 if i < rem else quot for i in range(m)]
+
+    train_dataset_splits = torch.utils.data.random_split(train_dataset, sizes)
+
     return train_dataset_splits, test_dataset
 
 
@@ -219,7 +223,7 @@ def main():
     cfg.save_model = False
     if cfg.save_model == True:
         cfg.save_model_dirname = "./save_models"
-        cfg.save_model_filename = "Model"
+        cfg.save_model_filename = "caltech101.pth"
 
     """ Running """
     if comm_size > 1:

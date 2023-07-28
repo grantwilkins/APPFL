@@ -50,7 +50,7 @@ def run_server(
         compressor = Compressor(cfg=cfg)
 
     # FIXME: I think it's ok for server to use cpu only.
-    device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     """ log for a server """
     logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ def run_server(
 
         # We need to load the model on cpu, before communicating.
         # Otherwise, out-of-memeory error from GPU
-        server.model.to("cpu")
+        server.model.to(device)
 
         global_state = server.model.state_dict()
         server_comp_ratio = 0.0
@@ -158,21 +158,26 @@ def run_server(
                     ori_shape=ori_shape,
                     ori_dtype=np.float32,
                 )
-                decompress_times.append(time.time() - decompress_time_start)
-                local_state["primal"] = copy_arr
                 new_state_dic = utils.unflatten_model_params(
-                    model=model, flat_params=local_state["primal"]
+                    model=model, flat_params=copy_arr
                 )
                 local_state["primal"] = new_state_dic
+                if local_state["dual"] != None:
+                    copy_arr = compressor.decompress(
+                        cmp_data=local_state["dual"],
+                        ori_shape=ori_shape,
+                        ori_dtype=np.float32,
+                    )
+                    new_state_dic = utils.unflatten_model_params(
+                        model=model, flat_params=copy_arr
+                    )
+                    local_state["dual"] = new_state_dic
+                decompress_times.append(time.time() - decompress_time_start)
         # print("Start Server Update")
 
         global_update_start = time.time()
         server.update(local_states)
         global_update_time = time.time() - global_update_start
-        if (t + 1) % 10 == 0:
-            weights = flatten_model_params(model=server.model)
-            file_name = "weights_" + str(t + 1) + ".txt"
-            np.savetxt(file_name, weights)
         cfg["logginginfo"]["GlobalUpdate_time"] = global_update_time
         validation_start = time.time()
         if cfg.validation == True:
@@ -197,7 +202,13 @@ def run_server(
 
         server.logging_iteration(cfg, logger, t)
         for cid in range(num_clients):
-            stats_file = "stats_" + str(cid) + ".csv"
+            stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+                cfg.dataset,
+                cfg.model,
+                cfg.fed.servername,
+                cfg.compressor,
+                cid,
+            )
             with open(stats_file, "a") as f:
                 f.write(
                     str(decompress_times[cid])
@@ -267,11 +278,7 @@ def run_client(
     comm_size = comm.Get_size()
     comm_rank = comm.Get_rank()
 
-    ## We assume to have as many GPUs as the number of MPI processes.
-    if cfg.device == "cuda":
-        device = f"cuda:{comm_rank-1}"
-    else:
-        device = cfg.device
+    device = cfg.device
 
     num_client_groups = np.array_split(range(num_clients), comm_size - 1)
 

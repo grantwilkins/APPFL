@@ -14,6 +14,7 @@ import copy
 import math
 from appfl.misc.utils import *
 from appfl.compressor import *
+import torch.nn as nn
 
 
 class IIADMMServer(BaseServer):
@@ -34,7 +35,7 @@ class IIADMMServer(BaseServer):
     def update(self, local_states: OrderedDict):
         """Inputs for the global model update"""
         for name, param in self.model.named_parameters():
-            self.global_state[name] = param.data.cpu()
+            self.global_state[name] = param.data
         # self.global_state = copy.deepcopy(self.model.state_dict())
         super(IIADMMServer, self).primal_recover_from_local_states(local_states)
         super(IIADMMServer, self).penalty_recover_from_local_states(local_states)
@@ -48,17 +49,22 @@ class IIADMMServer(BaseServer):
             tmp = 0.0
             for i in range(self.num_clients):
                 ## change device
-                self.primal_states[i][name] = self.primal_states[i][name]
+                self.primal_states[i][name] = self.primal_states[i][name].to(
+                    self.device
+                )
 
                 ## dual
-                self.dual_states[i][name] = self.dual_states[i][name] + self.penalty[
-                    i
-                ] * (self.global_state[name] - self.primal_states[i][name])
+                self.dual_states[i][name] = self.dual_states[i][name].to(
+                    self.device
+                ) + self.penalty[i] * (
+                    self.global_state[name] - self.primal_states[i][name]
+                )
 
                 ## computation
+                epsilon = 1e-8  # Define a small constant to prevent division by zero
                 tmp += (
                     self.primal_states[i][name]
-                    - (1.0 / self.penalty[i]) * self.dual_states[i][name]
+                    - (1.0 / (self.penalty[i] + epsilon)) * self.dual_states[i][name]
                 )
 
             self.global_state[name] = tmp / self.num_clients
@@ -121,6 +127,35 @@ class IIADMMClient(BaseClient):
         self.penalty = kwargs["init_penalty"]
         self.is_first_iter = 1
         self.compressor = Compressor(cfg)
+
+    def magnitude_prune(self, model: nn.Module, prune_ratio: float):
+        """
+        Perform magnitude-based pruning on a PyTorch model.
+
+        Args:
+        model: the PyTorch model to prune.
+        prune_ratio: the percentage of weights to prune in each layer.
+
+        Returns:
+        The pruned model.
+        """
+        # Make a copy of the model
+        model_copy = copy.deepcopy(model)
+        nonzero_total = 0
+        param_total = 0
+        for _, param in model_copy.named_parameters():
+            if param.requires_grad:
+                # Flatten the tensor to 1D for easier percentile calculation
+                param_flattened = param.detach().cpu().numpy().flatten()
+                # Compute the threshold as the (prune_ratio * 100) percentile of the absolute values
+                threshold = np.percentile(np.abs(param_flattened), prune_ratio * 100)
+                # Create a mask that will be True for the weights to keep and False for the weights to prune
+                mask = torch.abs(param) > threshold
+                # Apply the mask
+                param.data.mul_(mask.float())
+                nonzero_total += torch.count_nonzero(param.data).item()
+                param_total += param.data.numel()
+        return model_copy
 
     def update(self):
         self.model.train()
@@ -194,24 +229,40 @@ class IIADMMClient(BaseClient):
             scale_value = sensitivity / self.epsilon
             super(IIADMMClient, self).laplace_mechanism_output_perturb(scale_value)
 
+        """
         ## store data in cpu before sending it to server
         if self.cfg.device == "cuda":
             for name, param in self.model.named_parameters():
                 self.primal_state[name] = param.data.cpu()
+        """
 
+        """
+        Pruning step
+        """
+        if self.cfg.pruning == True:
+            self.model = self.magnitude_prune(self.model, self.cfg.pruning_threshold)
         # POSSIBLY COMPRESS AND LOG THE STATS
         start_time = time.time()
         compression_ratio = 0
-        flat_params = flatten_model_params(self.model)
+        flat_primal = flatten_primal_or_dual(self.primal_state)
+        flat_dual = flatten_primal_or_dual(self.dual_state)
         if self.cfg.compressed_weights_client == True:
-            compressed_weights_client = self.compressor.compress(ori_data=flat_params)
-            self.cfg.flat_model_size = flat_params.shape
-            compression_ratio = (len(flat_params)) / (
-                len(compressed_weights_client) * 4
+            compressed_primal = self.compressor.compress(ori_data=flat_primal)
+            compressed_dual = self.compressor.compress(ori_data=flat_dual)
+            self.cfg.flat_model_size = flat_primal.shape
+            compression_ratio = (len(flat_primal) * 8) / (
+                len(compressed_dual) + len(compressed_primal)
             )
         compress_time = time.time() - start_time
 
-        with open("stats.csv", "a") as f:
+        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+            self.cfg.dataset,
+            self.cfg.model,
+            self.cfg.fed.servername,
+            self.cfg.compressor,
+            self.id,
+        )
+        with open(stats_file, "a") as f:
             f.write(
                 str(self.cfg.dataset)
                 + ","
@@ -229,18 +280,29 @@ class IIADMMClient(BaseClient):
                 + ","
                 + str(self.cfg.compressor_error_bound)
                 + ","
-                + str(flat_params.shape[0])
+                + str(flat_primal.shape[0])
                 + ","
                 + str(compress_time)
                 + ","
+                + str(self.cfg.pruning)
+                + ","
+                + str(self.cfg.pruning_threshold)
+                + ","
+                + str(np.std(flat_primal))
+                + ","
+                + str(np.median(flat_primal))
+                + ","
+                + str(np.mean(flat_primal))
+                + ","
             )
-
         """ Update local_state """
         self.local_state = OrderedDict()
         self.local_state["primal"] = self.primal_state
         if self.cfg.compressed_weights_client == True:
-            self.local_state["primal"] = compressed_weights_client
-        self.local_state["dual"] = OrderedDict()
+            self.local_state["primal"] = compressed_primal
+        self.local_state["dual"] = self.dual_state
+        if self.cfg.compressed_weights_client == True:
+            self.local_state["dual"] = compressed_dual
         self.local_state["penalty"] = OrderedDict()
         self.local_state["penalty"][self.id] = self.penalty
 

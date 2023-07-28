@@ -3,6 +3,8 @@ from ..config import Config
 from typing import Tuple, Any
 import numpy as np
 import pickle
+from . import pyszx
+import zfpy
 
 
 class Compressor:
@@ -17,7 +19,6 @@ class Compressor:
             "NORM": 5,
             "PW_REL": 10,
         }
-        self.compressor_class = None
 
     def compress(self, ori_data: np.ndarray):
         """
@@ -27,11 +28,10 @@ class Compressor:
         """
         if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
             self.cfg.flat_model_size = ori_data.shape
-            if self.compressor_class is None:
-                self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
             error_mode = self.sz_error_mode_dict[self.cfg.compressor_error_mode]
             error_bound = self.cfg.compressor_error_bound
-            compressed_arr, comp_ratio = self.compressor_class.compress(
+            compressed_arr, comp_ratio = compressor.compress(
                 data=ori_data,
                 eb_mode=error_mode,
                 eb_abs=error_bound,
@@ -39,6 +39,30 @@ class Compressor:
                 eb_pwr=error_bound,
             )
             return compressed_arr.tobytes()
+        elif self.cfg.compressor == "SZx":
+            self.cfg.flat_model_size = ori_data.shape
+            compressor = pyszx.SZx(szxpath=self.cfg.compressor_lib_path)
+            error_mode = self.sz_error_mode_dict[self.cfg.compressor_error_mode]
+            error_bound = self.cfg.compressor_error_bound
+            compressed_arr, comp_ratio = compressor.compress(
+                data=ori_data,
+                eb_mode=error_mode,
+                eb_abs=error_bound,
+                eb_rel=error_bound,
+            )
+            return compressed_arr.tobytes()
+        elif self.cfg.compressor == "ZFP":
+            if self.cfg.compressor_error_mode == "ABS":
+                return zfpy.compress_numpy(
+                    ori_data, tolerance=self.cfg.compressor_error_bound
+                )
+            elif self.cfg.compressor_error_mode == "REL":
+                range_data = abs(np.max(ori_data) - np.min(ori_data))
+                return zfpy.compress_numpy(
+                    ori_data, tolerance=self.cfg.compressor_error_bound * range_data
+                )
+            else:
+                raise NotImplementedError
         elif self.cfg.compressor == "Prune":
             k = len(ori_data)
             data = np.zeros(k, dtype="float32")
@@ -79,17 +103,27 @@ class Compressor:
         :param ori_data: compressed data, numpy array format
         :return: decompressed data,numpy array format
         """
-        if self.cfg.compressor == "SZ3" or "SZ2":
+        if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
             self.cfg.flat_model_size = ori_data.shape
-            if self.compressor_class is None:
-                self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
             error_mode = self.sz_error_mode_dict[error_mode]
-            compressed_arr, comp_ratio = self.compressor_class.compress(
+            compressed_arr, comp_ratio = compressor.compress(
                 data=ori_data,
                 eb_mode=error_mode,
                 eb_abs=error_bound,
                 eb_rel=error_bound,
                 eb_pwr=error_bound,
+            )
+            return compressed_arr.tobytes()
+        elif self.cfg.compressor == "SZx":
+            self.cfg.flat_model_size = ori_data.shape
+            compressor = pyszx.SZx(szxpath=self.cfg.compressor_lib_path)
+            error_mode = self.sz_error_mode_dict[error_mode]
+            compressed_arr, comp_ratio = compressor.compress(
+                data=ori_data,
+                eb_mode=error_mode,
+                eb_abs=error_bound,
+                eb_rel=error_bound,
             )
             return compressed_arr.tobytes()
         else:
@@ -106,15 +140,25 @@ class Compressor:
         :return: decompressed data,numpy array format
         """
         if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
-            if self.compressor_class is None:
-                self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
             cmp_data = np.frombuffer(cmp_data, dtype=np.uint8)
-            decompressed_arr = self.compressor_class.decompress(
+            decompressed_arr = compressor.decompress(
                 data_cmpr=cmp_data,
                 original_shape=ori_shape,
                 original_dtype=ori_dtype,
             )
             return decompressed_arr
+        elif self.cfg.compressor == "SZx":
+            compressor = pyszx.SZx(szxpath=self.cfg.compressor_lib_path)
+            cmp_data = np.frombuffer(cmp_data, dtype=np.uint8)
+            decompressed_arr = compressor.decompress(
+                data_cmpr=cmp_data,
+                original_shape=ori_shape,
+                original_dtype=ori_dtype,
+            )
+            return decompressed_arr
+        elif self.cfg.compressor == "ZFP":
+            return zfpy.decompress_numpy(cmp_data)
         elif self.cfg.compressor == "Prune":
             data_dict = pickle.loads(cmp_data)
             index = data_dict["idx"]
@@ -135,8 +179,8 @@ class Compressor:
 
     def verify(self, ori_data, dec_data) -> Tuple[float, ...]:
         if self.cfg.compressor == "SZ3" or "SZ2":
-            if self.compressor_class is None:
-                self.compressor_class = pysz.SZ(szpath=self.cfg.compressor_lib_path)
-            return self.compressor_class.verify(ori_data, dec_data)
+            if compressor is None:
+                compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            return compressor.verify(ori_data, dec_data)
         else:
             raise NotImplementedError

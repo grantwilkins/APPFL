@@ -99,7 +99,6 @@ class ClientOptim(BaseClient):
         self.model.to(self.cfg.device)
 
         optimizer = eval(self.optim)(self.model.parameters(), **self.optim_args)
-
         """ Multiple local update """
         start_time = time.time()
         ## initial evaluation
@@ -186,7 +185,6 @@ class ClientOptim(BaseClient):
         start_time = time.time()
         compression_ratio = 0
         flat_params = utils.flatten_model_params(self.model)
-        chosen_error_bound = self.pick_error_bound(flat_params)
         if self.cfg.compressed_weights_client == True:
             compressed_weights_client_arr = self.compressor.compress(
                 ori_data=flat_params
@@ -195,8 +193,15 @@ class ClientOptim(BaseClient):
             compression_ratio = (len(flat_params) * 4) / (
                 len(compressed_weights_client_arr)
             )
+
         compress_time = time.time() - start_time
-        stats_file = "stats_" + str(self.id) + ".csv"
+        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+            self.cfg.dataset,
+            self.cfg.model,
+            self.cfg.fed.servername,
+            self.cfg.compressor,
+            self.id,
+        )
         with open(stats_file, "a") as f:
             f.write(
                 str(self.cfg.dataset)
@@ -215,11 +220,21 @@ class ClientOptim(BaseClient):
                 + ","
                 + self.cfg.compressor_error_mode
                 + ","
-                + str(chosen_error_bound)
+                + str(self.cfg.compressor_error_bound)
                 + ","
                 + str(flat_params.shape[0])
                 + ","
                 + str(compress_time)
+                + ","
+                + str(self.cfg.pruning)
+                + ","
+                + str(self.cfg.pruning_threshold)
+                + ","
+                + str(np.std(flat_params))
+                + ","
+                + str(np.median(flat_params))
+                + ","
+                + str(np.mean(flat_params))
                 + ","
             )
 

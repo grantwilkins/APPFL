@@ -33,6 +33,7 @@ parser.add_argument("--num_pixel", type=int, default=28)
 parser.add_argument("--model", type=str, default="AlexNetMNIST")
 parser.add_argument("--pretrained", type=int, default=0)
 
+
 ## algorithm
 parser.add_argument(
     "--federation_type", type=str, default="Federated"
@@ -74,6 +75,11 @@ parser.add_argument(
     action=argparse.BooleanOptionalAction,
     required=False,
     default=False,
+)
+parser.add_argument(
+    "--compressor_lib_path",
+    type=str,
+    default="/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib",
 )
 parser.add_argument("--pruning_threshold", type=float, default=0.01)
 
@@ -143,7 +149,7 @@ def main():
     cfg.compressed_weights_client = args.compressed_client
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
-    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    cfg.compressor_lib_path = args.compressor_lib_path
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode
     cfg.pruning = args.pruning

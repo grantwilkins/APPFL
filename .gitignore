@@ -934,3 +934,6 @@ examples/weights_20.txt
 examples/weights_30.txt
 examples/weights_40.txt
 examples/weights_50.txt
+examples/*pth
+examples/plots/*
+examples/data/*

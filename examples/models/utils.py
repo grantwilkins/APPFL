@@ -1,6 +1,6 @@
 from .cnn import CNN, ComplexCNN
 from .resnet import resnet18, resnet101
-from .alexnet import AlexNetMNIST, AlexNetCIFAR
+from .alexnet import AlexNetMNIST, AlexNetCIFAR, AlexNetCaltech
 from .vgg16 import VGG16MNIST, VGG16CIFAR
 from .lenet5 import LeNet5
 
@@ -15,6 +15,8 @@ def get_model(args):
         model = AlexNetMNIST(args.num_channel, args.num_classes, args.num_pixel)
     if args.model == "AlexNetCIFAR":
         model = AlexNetCIFAR(args.num_classes)
+    if args.model == "AlexNetCaltech":
+        model = AlexNetCaltech(args.num_classes)
     if args.model == "VGG16MNIST":
         model = VGG16MNIST(args.num_channel, args.num_classes, args.num_pixel)
     if args.model == "VGG16CIFAR":

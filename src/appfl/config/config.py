@@ -92,6 +92,7 @@ class Config:
     )
     client: DictConfig = OmegaConf.create({"id": 1})
 
+    stats_file: str = ""
     # Compression Information
     compressed_weights_client: bool = False
     compressed_weights_server: bool = False
