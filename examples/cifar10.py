@@ -278,6 +278,6 @@ if __name__ == "__main__":
 # To run CUDA-aware MPI:
 # mpiexec -np 2 --mca opal_cuda_support 1 python ./cifar10.py
 # To run MPI:
-# mpiexec -np 2 python ./cifar10.py
+# mpiexec -np 2 python ./cifar10.py --loss_fn losses/celoss.py --loss_fn_name CELoss
 # To run:
-# python ./cifar10.py
+# python ./cifar10.py --loss_fn losses/celoss.py --loss_fn_name CELoss

@@ -18,6 +18,8 @@ import appfl.run_mpi as rm
 from mpi4py import MPI
 
 import argparse
+from losses.utils import get_loss
+from metric.utils import get_metric
 
 """ read arguments """
 
@@ -244,7 +246,14 @@ def main():
     if comm_size > 1:
         if comm_rank == 0:
             rm.run_server(
-                cfg, comm, model, loss_fn, args.num_clients, test_dataset, args.dataset
+                cfg,
+                comm,
+                model,
+                loss_fn,
+                args.num_clients,
+                test_dataset,
+                args.dataset,
+                metric,
             )
         else:
             rm.run_client(
@@ -266,8 +275,8 @@ if __name__ == "__main__":
 
 
 # To run CUDA-aware MPI:
-# mpiexec -np 2 --mca opal_cuda_support 1 python ./mnist.py
+# mpiexec -np 2 --mca opal_cuda_support 1 python ./mnist.py --loss_fn losses/celoss.py --loss_fn_name CELoss
 # To run MPI:
-# mpiexec -np 2 python ./mnist.py
+# mpiexec -np 2 python ./mnist.py --loss_fn losses/celoss.py --loss_fn_name CELoss
 # To run:
-# python ./mnist.py
+# python ./mnist.py --loss_fn losses/celoss.py --loss_fn_name CELoss
