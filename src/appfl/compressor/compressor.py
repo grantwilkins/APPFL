@@ -260,50 +260,14 @@ class Compressor:
         model_copy.load_state_dict(new_dict)
         return model_copy
 
-    def compress_error_control(
-        self, ori_data: np.ndarray, error_bound: float, error_mode: str
-    ):
-        """
-        Compress data with chosen compressor
-        :param ori_data: compressed data, numpy array format
-        :return: decompressed data,numpy array format
-        """
-        if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
-            self.cfg.flat_model_size = ori_data.shape
-            compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
-            error_mode = self.sz_error_mode_dict[error_mode]
-            compressed_arr, comp_ratio = compressor.compress(
-                data=ori_data,
-                eb_mode=error_mode,
-                eb_abs=error_bound,
-                eb_rel=error_bound,
-                eb_pwr=error_bound,
-            )
-            return compressed_arr.tobytes()
-        elif self.cfg.compressor == "SZx":
-            self.cfg.flat_model_size = ori_data.shape
-            compressor = pyszx.SZx(szxpath=self.cfg.compressor_lib_path)
-            error_mode = self.sz_error_mode_dict[error_mode]
-            compressed_arr, comp_ratio = compressor.compress(
-                data=ori_data,
-                eb_mode=error_mode,
-                eb_abs=error_bound,
-                eb_rel=error_bound,
-            )
-            return compressed_arr.tobytes()
-        else:
-            raise NotImplementedError
-
     def decompress(
         self, cmp_data, ori_shape: Tuple[int, ...], ori_dtype: np.dtype
     ) -> np.ndarray:
-        """
-        Decompress data with chosen compressor
-        :param cmp_data: compressed data, numpy array format, dtype should be np.uint8
-        :param ori_shape: the shape of original data
-        :param ori_dtype: the dtype of original data
-        :return: decompressed data,numpy array format
-        """
+        # Decompress data with chosen compressor
+        # :param cmp_data: compressed data, numpy array format, dtype should be np.uint8
+        # :param ori_shape: the shape of original data
+        # :param ori_dtype: the dtype of original data
+        # :return: decompressed data,numpy array format
         if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
             compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
             cmp_data = np.frombuffer(cmp_data, dtype=np.uint8)
@@ -342,6 +306,42 @@ class Compressor:
         else:
             raise NotImplementedError
 
+
+"""
+The commented area is a graveyard of archaic code that I am too afraid to delete.
+
+    def compress_error_control(
+        self, ori_data: np.ndarray, error_bound: float, error_mode: str
+    ):
+        # Compress data with chosen compressor
+        # :param ori_data: compressed data, numpy array format
+        # :return: decompressed data,numpy array format
+        if self.cfg.compressor == "SZ3" or self.cfg.compressor == "SZ2":
+            self.cfg.flat_model_size = ori_data.shape
+            compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
+            error_mode = self.sz_error_mode_dict[error_mode]
+            compressed_arr, comp_ratio = compressor.compress(
+                data=ori_data,
+                eb_mode=error_mode,
+                eb_abs=error_bound,
+                eb_rel=error_bound,
+                eb_pwr=error_bound,
+            )
+            return compressed_arr.tobytes()
+        elif self.cfg.compressor == "SZx":
+            self.cfg.flat_model_size = ori_data.shape
+            compressor = pyszx.SZx(szxpath=self.cfg.compressor_lib_path)
+            error_mode = self.sz_error_mode_dict[error_mode]
+            compressed_arr, comp_ratio = compressor.compress(
+                data=ori_data,
+                eb_mode=error_mode,
+                eb_abs=error_bound,
+                eb_rel=error_bound,
+            )
+            return compressed_arr.tobytes()
+        else:
+            raise NotImplementedError
+
     def verify(self, ori_data, dec_data) -> Tuple[float, ...]:
         if self.cfg.compressor == "SZ3" or "SZ2":
             return pysz.SZ(szpath=self.cfg.compressor_lib_path).verify(
@@ -349,3 +349,4 @@ class Compressor:
             )
         else:
             raise NotImplementedError
+"""

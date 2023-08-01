@@ -216,43 +216,44 @@ def run_server(
         cfg["logginginfo"]["BestAccuracy"] = best_accuracy
 
         server.logging_iteration(cfg, logger, t)
-        for cid in range(num_clients):
-            stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
-                cfg.dataset,
-                cfg.model,
-                cfg.fed.servername,
-                cfg.compressor,
-                cid,
-            )
-            with open(stats_file, "a") as f:
-                f.write(
-                    str(decompress_times[cid])
-                    + ","
-                    + str(server_comp_ratio)
-                    + ","
-                    + str(t)
-                    + ","
-                    + str(cfg.num_epochs)
-                    + ","
-                    + str(cfg.num_clients)
-                    + ","
-                    + str(validation_time)
-                    + ","
-                    + str(periter_time)
-                    + ","
-                    + str(elapsed_time)
-                    + ","
-                    + str(test_loss)
-                    + ","
-                    + str(test_accuracy)
-                    + ","
-                    + str(best_accuracy)
-                    + ","
-                    + cfg.fed.servername
-                    + ","
-                    + cfg.fed.args.optim
-                    + "\n"
+        if cfg.compressor_stats == True:
+            for cid in range(num_clients):
+                stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+                    cfg.dataset,
+                    cfg.model,
+                    cfg.fed.servername,
+                    cfg.compressor,
+                    cid,
                 )
+                with open(stats_file, "a") as f:
+                    f.write(
+                        str(decompress_times[cid])
+                        + ","
+                        + str(server_comp_ratio)
+                        + ","
+                        + str(t)
+                        + ","
+                        + str(cfg.num_epochs)
+                        + ","
+                        + str(cfg.num_clients)
+                        + ","
+                        + str(validation_time)
+                        + ","
+                        + str(periter_time)
+                        + ","
+                        + str(elapsed_time)
+                        + ","
+                        + str(test_loss)
+                        + ","
+                        + str(test_accuracy)
+                        + ","
+                        + str(best_accuracy)
+                        + ","
+                        + cfg.fed.servername
+                        + ","
+                        + cfg.fed.args.optim
+                        + "\n"
+                    )
         """ Saving model """
         if (t + 1) % cfg.checkpoints_interval == 0 or t + 1 == cfg.num_epochs:
             if cfg.save_model == True:

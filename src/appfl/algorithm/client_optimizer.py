@@ -41,56 +41,6 @@ class ClientOptim(BaseClient):
 
         super(ClientOptim, self).client_log_title()
 
-    def magnitude_prune(self, model: nn.Module, prune_ratio: float):
-        """
-        Perform magnitude-based pruning on a PyTorch model.
-
-        Args:
-        model: the PyTorch model to prune.
-        prune_ratio: the percentage of weights to prune in each layer.
-
-        Returns:
-        The pruned model.
-        """
-        # Make a copy of the model
-        model_copy = copy.deepcopy(model)
-        nonzero_total = 0
-        param_total = 0
-        for _, param in model_copy.named_parameters():
-            if param.requires_grad:
-                # Flatten the tensor to 1D for easier percentile calculation
-                param_flattened = param.detach().cpu().numpy().flatten()
-                # Compute the threshold as the (prune_ratio * 100) percentile of the absolute values
-                threshold = np.percentile(np.abs(param_flattened), prune_ratio * 100)
-                # Create a mask that will be True for the weights to keep and False for the weights to prune
-                mask = torch.abs(param) > threshold
-                # Apply the mask
-                param.data.mul_(mask.float())
-                nonzero_total += torch.count_nonzero(param.data).item()
-                param_total += param.data.numel()
-        return model_copy
-
-    def pick_error_bound(self, flat_params):
-        """
-        Pick the error bound for the given parameters and standard deviations.
-
-        Args:
-        flat_params: the flattened parameters of the model.
-        std_devs: the per-round standard deviations of the parameters.
-
-        Returns:
-        The error bound to use for the given parameters and standard deviations.
-        """
-        if self.std_devs == []:
-            self.std_devs.append(np.std(flat_params))
-            return np.std(flat_params)
-        min_std = np.min(self.std_devs)
-        if np.std(flat_params) > 4 * min_std:
-            return min_std
-        else:
-            self.std_devs.append(np.std(flat_params))
-            return np.std(flat_params)
-
     def update(self):
         """Inputs for the local model update"""
 
@@ -169,13 +119,8 @@ class ClientOptim(BaseClient):
                     os.path.join(path, "%s_%s.pt" % (self.round, t)),
                 )
         end_local_time = time.time() - start_time
-        """
-        Pruning step
-        """
-        if self.cfg.pruning == True:
-            self.model = self.magnitude_prune(self.model, self.cfg.pruning_threshold)
-        self.round += 1
 
+        self.round += 1
         self.primal_state = copy.deepcopy(self.model.state_dict())
         if self.cfg.device == "cuda":
             for k in self.primal_state:
@@ -195,65 +140,58 @@ class ClientOptim(BaseClient):
                 len(compressed_weights_client_arr)
             )
             percent_lossy = num_lossy_elem * 100 / len(flat_params)
-            """
-            compressed_weights_client_arr = self.compressor.compress(
-                ori_data=flat_params
-            )
-            self.cfg.flat_model_size = flat_params.shape
-            compression_ratio = (len(flat_params) * 4) / (
-                len(compressed_weights_client_arr)
-            )
-            """
 
         compress_time = time.time() - start_time
-        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
-            self.cfg.dataset,
-            self.cfg.model,
-            self.cfg.fed.servername,
-            self.cfg.compressor,
-            self.id,
-        )
-        with open(stats_file, "a") as f:
-            f.write(
-                str(self.cfg.dataset)
-                + ","
-                + str(self.cfg.model)
-                + ","
-                + str(self.id)
-                + ","
-                + str(self.cfg.compressed_weights_client)
-                + ","
-                + str(self.cfg.compressed_weights_server)
-                + ","
-                + str(compression_ratio)
-                + ","
-                + str(percent_lossy)
-                + ","
-                + self.cfg.compressor
-                + ","
-                + self.cfg.compressor_error_mode
-                + ","
-                + str(self.cfg.compressor_error_bound)
-                + ","
-                + str(flat_params.shape[0])
-                + ","
-                + str(compress_time)
-                + ","
-                + str(end_local_time)
-                + ","
-                + str(self.cfg.pruning)
-                + ","
-                + str(self.cfg.pruning_threshold)
-                + ","
-                + str(np.std(flat_params))
-                + ","
-                + str(np.median(flat_params))
-                + ","
-                + str(np.mean(flat_params))
-                + ","
-                + str(np.max(flat_params) - np.min(flat_params))
-                + ","
+
+        if self.cfg.compressor_stats == True:
+            stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+                self.cfg.dataset,
+                self.cfg.model,
+                self.cfg.fed.servername,
+                self.cfg.compressor,
+                self.id,
             )
+            with open(stats_file, "a") as f:
+                f.write(
+                    str(self.cfg.dataset)
+                    + ","
+                    + str(self.cfg.model)
+                    + ","
+                    + str(self.id)
+                    + ","
+                    + str(self.cfg.compressed_weights_client)
+                    + ","
+                    + str(self.cfg.compressed_weights_server)
+                    + ","
+                    + str(compression_ratio)
+                    + ","
+                    + str(percent_lossy)
+                    + ","
+                    + self.cfg.compressor
+                    + ","
+                    + self.cfg.compressor_error_mode
+                    + ","
+                    + str(self.cfg.compressor_error_bound)
+                    + ","
+                    + str(flat_params.shape[0])
+                    + ","
+                    + str(compress_time)
+                    + ","
+                    + str(end_local_time)
+                    + ","
+                    + str(self.cfg.pruning)
+                    + ","
+                    + str(self.cfg.pruning_threshold)
+                    + ","
+                    + str(np.std(flat_params))
+                    + ","
+                    + str(np.median(flat_params))
+                    + ","
+                    + str(np.mean(flat_params))
+                    + ","
+                    + str(np.max(flat_params) - np.min(flat_params))
+                    + ","
+                )
 
         """ Differential Privacy  """
         if self.epsilon != False:

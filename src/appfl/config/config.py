@@ -108,7 +108,6 @@ class Config:
     compressor_error_bound: float = 0.0
     flat_model_size: Tuple[int, ...] = (0,)
     flat_model_dtype: str = "np.float32"
-    pruning: bool = False
-    pruning_threshold: float = 0.01
     param_cutoff: int = 1024
     lossless_compressor: str = "blosc"
+    compressor_stats: bool = False
