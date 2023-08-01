@@ -21,6 +21,7 @@ import argparse
 import torch.optim as optim
 import logging
 from torch.utils.data import DataLoader
+from torchvision.models import alexnet
 
 
 """ read arguments """
@@ -34,21 +35,24 @@ parser.add_argument("--dataset", type=str, default="CIFAR10")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=32)
-parser.add_argument("--model", type=str, default="CNN")
+parser.add_argument("--model", type=str, default="AlexNetCIFAR")
 parser.add_argument("--pretrained", type=int, default=0)
 parser.add_argument("--train_data_batch_size", type=int, default=128)
 parser.add_argument("--test_data_batch_size", type=int, default=128)
 
+parser.add_argument(
+    "--federation_type", type=str, default="Federated"
+)  ## Federated, ICEADMM, IIADMM
 
 ## clients
 parser.add_argument("--num_clients", type=int, default=1)
 parser.add_argument("--client_optimizer", type=str, default="Adam")
 parser.add_argument("--client_lr", type=float, default=1e-3)
-parser.add_argument("--num_local_epochs", type=int, default=20)
+parser.add_argument("--num_local_epochs", type=int, default=1)
 
 ## server
 parser.add_argument("--server", type=str, default="ServerFedAvg")
-parser.add_argument("--num_epochs", type=int, default=1)
+parser.add_argument("--num_epochs", type=int, default=20)
 
 parser.add_argument("--server_lr", type=float, required=False)
 parser.add_argument("--mparam_1", type=float, required=False)
@@ -92,7 +96,7 @@ def get_data():
     dir = os.getcwd() + "/datasets/RawData"
 
     normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
     )
 
     # Define common transform for train and test data

@@ -7,13 +7,13 @@ import numpy as np
 
 error_bounds = [1e-1, 5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
 
-num_client = 5
+num_client = 2
 
 num_epochs = 20
 
-server_algorithm = "IIADMMServer"
+server_algorithm = "ServerFedAdagrad"
 
-federation_type = "IIADMM"
+federation_type = "Federated"
 
 pruning_threshold = 0.5
 

@@ -9,7 +9,7 @@ error_bound = 5e-2
 
 num_client = 1
 
-num_epochs = 20
+num_epochs = 10
 
 server_algorithm = "ServerFedAvg"
 

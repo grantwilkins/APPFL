@@ -161,7 +161,7 @@ def main():
         cfg.fed.args.num_local_epochs = args.num_local_epochs
 
     ## outputs
-    cfg.use_tensorboard = True
+    cfg.use_tensorboard = False
 
     if comm_size > 1:
         if comm_rank == 0:

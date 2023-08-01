@@ -162,7 +162,7 @@ def run_server(
                     model=model, flat_params=copy_arr
                 )
                 local_state["primal"] = new_state_dic
-                if local_state["dual"] != None:
+                if local_state["dual"] != OrderedDict():
                     copy_arr = compressor.decompress(
                         cmp_data=local_state["dual"],
                         ori_shape=ori_shape,

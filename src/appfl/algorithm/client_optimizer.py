@@ -14,8 +14,6 @@ import time
 from appfl.compressor import *
 from appfl.misc import *
 import torch.nn as nn
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 class ClientOptim(BaseClient):
