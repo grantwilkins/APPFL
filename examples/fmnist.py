@@ -28,7 +28,7 @@ parser.add_argument("--dataset", type=str, default="FMNIST")
 parser.add_argument("--num_channel", type=int, default=1)
 parser.add_argument("--num_classes", type=int, default=62)
 parser.add_argument("--num_pixel", type=int, default=28)
-parser.add_argument("--model", type=str, default="CNN")
+parser.add_argument("--model", type=str, default="AlexNetMNIST")
 
 ## algorithm
 parser.add_argument(

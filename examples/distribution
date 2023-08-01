@@ -1,0 +1,30 @@
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor ZFP
+mv ./precompress.pt ./plots/pre_ZFP_AlexNet_0.100000.pt
+mv ./postcompress.pt ./plots/post_ZFP_AlexNet_0.100000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor SZ3
+mv ./precompress.pt ./plots/pre_SZ3_AlexNet_0.100000.pt
+mv ./postcompress.pt ./plots/post_SZ3_AlexNet_0.100000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor ZFP
+mv ./precompress.pt ./plots/pre_ZFP_AlexNet_0.010000.pt
+mv ./postcompress.pt ./plots/post_ZFP_AlexNet_0.010000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor SZ3
+mv ./precompress.pt ./plots/pre_SZ3_AlexNet_0.010000.pt
+mv ./postcompress.pt ./plots/post_SZ3_AlexNet_0.010000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor ZFP
+mv ./precompress.pt ./plots/pre_ZFP_AlexNet_0.001000.pt
+mv ./postcompress.pt ./plots/post_ZFP_AlexNet_0.001000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor SZ3
+mv ./precompress.pt ./plots/pre_SZ3_AlexNet_0.001000.pt
+mv ./postcompress.pt ./plots/post_SZ3_AlexNet_0.001000.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor ZFP
+mv ./precompress.pt ./plots/pre_ZFP_AlexNet_0.000100.pt
+mv ./postcompress.pt ./plots/post_ZFP_AlexNet_0.000100.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor SZ3
+mv ./precompress.pt ./plots/pre_SZ3_AlexNet_0.000100.pt
+mv ./postcompress.pt ./plots/post_SZ3_AlexNet_0.000100.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor ZFP
+mv ./precompress.pt ./plots/pre_ZFP_AlexNet_0.000010.pt
+mv ./postcompress.pt ./plots/post_ZFP_AlexNet_0.000010.pt
+mpiexec -np 2 python3 ./cifar10.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --compressor SZ3
+mv ./precompress.pt ./plots/pre_SZ3_AlexNet_0.000010.pt
+mv ./postcompress.pt ./plots/post_SZ3_AlexNet_0.000010.pt

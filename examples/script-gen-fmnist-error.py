@@ -15,8 +15,6 @@ server_algorithm = "IIADMMServer"
 
 federation_type = "IIADMM"
 
-pruning_threshold = 0.5
-
 models = ["AlexNetMNIST", "VGG16MNIST", "resnet18"]
 
 for model in models:
@@ -32,43 +30,36 @@ for model in models:
             federation_type,
         )
     )
-    print(
-        "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --pruning --pruning_threshold %f --model %s --federation_type %s"
-        % (
-            num_client + 1,
-            server_algorithm,
-            0.0,
-            num_client,
-            num_epochs,
-            pruning_threshold,
-            model,
-            federation_type,
-        )
-    )
     for error_bound in error_bounds:
-        print(
-            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --fedration_type %s"
-            % (
-                num_client + 1,
-                server_algorithm,
-                error_bound,
-                num_client,
-                num_epochs,
-                pruning_threshold,
-                model,
-                federation_type,
+        pruning_thresholds = [
+            0.012 / (error_bound + 0.125) - 0.04,
+            0.012 / (error_bound + 0.125),
+            0.012 / (error_bound + 0.125) + 0.04,
+        ]
+        for pruning_threshold in pruning_thresholds:
+            print(
+                "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --fedration_type %s"
+                % (
+                    num_client + 1,
+                    server_algorithm,
+                    error_bound,
+                    num_client,
+                    num_epochs,
+                    pruning_threshold,
+                    model,
+                    federation_type,
+                )
             )
-        )
-        print(
-            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --compressed_server --pruning --pruning_threshold %f --model %s --federation_type %s"
-            % (
-                num_client + 1,
-                server_algorithm,
-                error_bound,
-                num_client,
-                num_epochs,
-                pruning_threshold,
-                model,
-                federation_type,
+            print(
+                "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --compressed_server --pruning --pruning_threshold %f --model %s --federation_type %s"
+                % (
+                    num_client + 1,
+                    server_algorithm,
+                    error_bound,
+                    num_client,
+                    num_epochs,
+                    pruning_threshold,
+                    model,
+                    federation_type,
+                )
             )
-        )
