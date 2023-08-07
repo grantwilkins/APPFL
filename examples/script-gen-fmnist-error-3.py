@@ -1,6 +1,6 @@
 """
 This test script generates the python executions to run basic experiments of lossy 
-compression and pruning on CIFAR-10 dataset using different error bounds and server
+compression and pruning on FMNIST dataset using different error bounds and server
 algorithms.
 """
 import numpy as np
@@ -15,15 +15,15 @@ num_epochs = 10
 
 num_local_epochs = 5
 
-server_algorithm = "ServerFedAvg"
+server_algorithm = "IIADMMServer"
 
-federation_type = "Federated"
+federation_type = "IIADMM"
 
-models = ["AlexNetCIFAR", "MobileNetV2", "ResNet50"]
+models = ["MobileNetV2", "ResNet50"]
 
 for model in models:
     print(
-        "mpiexec -np %d python3 ./cifar10.py --server %s --error_bound %f --num_clients %d --num_epochs %d --model %s --federation_type %s --num_local_epochs %d"
+        "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --model %s --federation_type %s --num_local_epochs %d"
         % (
             num_client + 1,
             server_algorithm,
@@ -37,7 +37,7 @@ for model in models:
     )
     for error_bound, pruning_threshold in zip(error_bounds, pruning_thresholds):
         print(
-            "mpiexec -np %d python3 ./cifar10.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --federation_type %s --num_local_epochs %d"
+            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --federation_type %s --num_local_epochs %d"
             % (
                 num_client + 1,
                 server_algorithm,

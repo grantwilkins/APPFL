@@ -131,7 +131,7 @@ def run_server(
                 error_bound=np.std(global_state),
                 error_mode="REL",
             )
-            server_comp_ratio = original_size / (len(global_state) * 4)
+            server_comp_ratio = 4 * original_size / (len(global_state))
 
         local_update_start = time.time()
         global_state = comm.bcast(global_state, root=0)

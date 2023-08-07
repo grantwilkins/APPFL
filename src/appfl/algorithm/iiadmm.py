@@ -272,6 +272,8 @@ class IIADMMClient(BaseClient):
                 + ","
                 + str(self.cfg.compressed_weights_client)
                 + ","
+                + str(self.cfg.compressed_weights_server)
+                + ","
                 + str(compression_ratio)
                 + ","
                 + self.cfg.compressor

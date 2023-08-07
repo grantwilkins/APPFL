@@ -7,6 +7,7 @@ import logging
 import random
 import numpy as np
 import copy
+from pathlib import Path
 
 
 def validation(self, dataloader):
@@ -47,8 +48,8 @@ def validation(self, dataloader):
 
 def create_custom_logger(logger, cfg: DictConfig):
     dir = cfg.output_dirname
-    if os.path.isdir(dir) == False:
-        os.mkdir(dir)
+    Path(dir).mkdir(parents=True, exist_ok=True)
+
     output_filename = cfg.output_filename + "_server"
 
     file_ext = ".txt"
@@ -73,8 +74,7 @@ def create_custom_logger(logger, cfg: DictConfig):
 
 
 def client_log(dir, output_filename):
-    if os.path.isdir(dir) == False:
-        os.mkdir(dir)
+    Path(dir).mkdir(parents=True, exist_ok=True)
 
     file_ext = ".txt"
     filename = dir + "/%s%s" % (output_filename, file_ext)
