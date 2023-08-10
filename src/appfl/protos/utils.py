@@ -1,5 +1,8 @@
 from .federated_learning_pb2 import DataBuffer
 from .federated_learning_pb2 import TensorRecord
+from appfl.misc.utils import flatten_primal_or_dual
+from appfl.compressor import Compressor
+from collections import OrderedDict
 
 
 def construct_tensor_record(name, nparray):
@@ -8,6 +11,15 @@ def construct_tensor_record(name, nparray):
         data_shape=list(nparray.shape),
         data_bytes=nparray.tobytes(order="C"),
         data_dtype="np." + str(nparray.dtype),
+    )
+
+
+def construct_compressed_tensor_record(name, primal_or_dual, cfg):
+    return TensorRecord(
+        name=name,
+        data_shape=(1,),
+        data_bytes=primal_or_dual,
+        data_dtype="np.float32",
     )
 
 

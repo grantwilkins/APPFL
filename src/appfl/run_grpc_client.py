@@ -69,6 +69,7 @@ def run_client(
         f"[Client ID: {cid: 03}] connecting to (uri,tls)=({uri},{cfg.server.use_tls})."
     )
     comm = FLClient(
+        cfg,
         cid,
         uri,
         cfg.server.use_tls,
@@ -97,7 +98,7 @@ def run_client(
         logger.error(f"[Client ID: {cid: 03}] weight ({weight}) retrieval failed.")
         return
 
-    "Run validation if test data is given or the configuration is enabled."
+    "Run validation if test data is given and the configuration is enabled."
     if cfg.validation == True and len(test_data) > 0:
         test_dataloader = DataLoader(
             test_data,

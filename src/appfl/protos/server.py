@@ -82,7 +82,7 @@ class FLServicer(federated_learning_pb2_grpc.FederatedLearningServicer):
         return ack
 
 
-def serve(servicer, max_message_size=2 * 1024 * 1024):
+def serve(servicer, max_message_size=1024 * 1024 * 1024):
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=10),
         options=[

@@ -124,7 +124,14 @@ def main():
     cfg.compressed_weights_client = args.compressed_client
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
-    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    if args.compressor == "SZ2":
+        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+    elif args.compressor == "SZx":
+        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
+    else:
+        cfg.compressor_lib_path = (
+            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+        )
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode
     cfg.pruning = args.pruning
@@ -154,11 +161,10 @@ def main():
     cfg.num_epochs = args.num_epochs
 
     cfg.fed = eval(args.federation_type + "()")
-    if args.federation_type == "Federated":
-        cfg.fed.args.optim = args.client_optimizer
-        cfg.fed.args.optim_args.lr = args.client_lr
-        cfg.fed.servername = args.server
-        cfg.fed.args.num_local_epochs = args.num_local_epochs
+    cfg.fed.args.optim = args.client_optimizer
+    cfg.fed.args.optim_args.lr = args.client_lr
+    cfg.fed.servername = args.server
+    cfg.fed.args.num_local_epochs = args.num_local_epochs
 
     ## outputs
     cfg.use_tensorboard = False

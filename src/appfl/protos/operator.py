@@ -37,6 +37,8 @@ class FLOperator:
         self.client_states = [OrderedDict() for _ in range(self.num_clients)]
         self.client_learning_status = OrderedDict()
         self.servicer = None  # Takes care of communication via gRPC
+        self.test_loss = 0.0
+        self.test_accuracy = 0.0
 
         self.dataloader = None
         if self.cfg.validation == True and len(test_dataset) > 0:
@@ -136,12 +138,12 @@ class FLOperator:
         self.fed_server.update(self.client_states)
 
         if self.cfg.validation == True:
-            test_loss, accuracy = validation(self.fed_server, self.dataloader)
+            self.test_loss, self.accuracy = validation(self.fed_server, self.dataloader)
 
-            if accuracy > self.best_accuracy:
-                self.best_accuracy = accuracy
+            if self.accuracy > self.best_accuracy:
+                self.best_accuracy = self.accuracy
             self.logger.info(
-                f"[Round: {self.round_number: 04}] Test set: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%, Best Accuracy: {self.best_accuracy:.2f}%"
+                f"[Round: {self.round_number: 04}] Test set: Average loss: {self.test_loss:.4f}, Accuracy: {self.accuracy:.2f}%, Best Accuracy: {self.best_accuracy:.2f}%"
             )
 
         if (
@@ -175,18 +177,53 @@ class FLOperator:
         )
         primal_tensors = OrderedDict()
         dual_tensors = OrderedDict()
-        for tensor in primal:
-            name = tensor.name
-            shape = tuple(tensor.data_shape)
-            flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
-            nparray = np.reshape(flat, newshape=shape, order="C")
-            primal_tensors[name] = torch.from_numpy(nparray)
-        for tensor in dual:
-            name = tensor.name
-            shape = tuple(tensor.data_shape)
-            flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
-            nparray = np.reshape(flat, newshape=shape, order="C")
-            dual_tensors[name] = torch.from_numpy(nparray)
+        decompress_time = 0.0
+        if self.cfg.compressed_weights_client == True:
+            compressor = Compressor(self.cfg)
+            if len(primal) != 1:
+                raise ValueError(
+                    "Compressed weights gRPC client only support one tensor in primal"
+                )
+            tensor = primal[0]
+            ori_dtype = eval(tensor.data_dtype)
+            ori_shape = flatten_model_params(self.model).shape
+            decompress_time_start = time.time()
+            copy_arr = compressor.decompress(
+                cmp_data=tensor.data_bytes,
+                ori_shape=ori_shape,
+                ori_dtype=ori_dtype,
+            )
+            new_state_dic = utils.unflatten_model_params(
+                model=self.model, flat_params=copy_arr
+            )
+            primal_tensors = new_state_dic
+            if len(dual) == 1:
+                tensor = dual[0]
+                ori_dtype = eval(tensor.data_dtype)
+                ori_shape = tuple(tensor.data_shape)
+                copy_arr = compressor.decompress(
+                    cmp_data=tensor.data_bytes,
+                    ori_shape=ori_shape,
+                    ori_dtype=ori_dtype,
+                )
+                new_state_dic = utils.unflatten_model_params(
+                    model=self.model, flat_params=copy_arr
+                )
+                dual_tensors = new_state_dic
+            decompress_time = time.time() - decompress_time_start
+        else:
+            for tensor in primal:
+                name = tensor.name
+                shape = tuple(tensor.data_shape)
+                flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
+                nparray = np.reshape(flat, newshape=shape, order="C")
+                primal_tensors[name] = torch.from_numpy(nparray)
+            for tensor in dual:
+                name = tensor.name
+                shape = tuple(tensor.data_shape)
+                flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
+                nparray = np.reshape(flat, newshape=shape, order="C")
+                dual_tensors[name] = torch.from_numpy(nparray)
         self.client_states[client_id]["primal"] = primal_tensors
         self.client_states[client_id]["dual"] = dual_tensors
         self.client_states[client_id]["penalty"] = OrderedDict()
@@ -202,3 +239,40 @@ class FLOperator:
                 f"[Round: {self.round_number: 04}] Finished; all clients have sent their results."
             )
             self.update_model_weights()
+
+        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+            self.cfg.dataset,
+            self.cfg.model,
+            self.cfg.fed.servername,
+            self.cfg.compressor,
+            client_id,
+        )
+        with open(stats_file, "a") as f:
+            f.write(
+                str(decompress_time)
+                + ","
+                + str(0.0)
+                + ","
+                + str(self.round_number - 1)
+                + ","
+                + str(self.cfg.num_epochs)
+                + ","
+                + str(self.cfg.num_clients)
+                + ","
+                + str(0.0)
+                + ","
+                + str(0.0)
+                + ","
+                + str(0.0)
+                + ","
+                + str(self.test_loss)
+                + ","
+                + str(self.test_accuracy)
+                + ","
+                + str(self.best_accuracy)
+                + ","
+                + self.cfg.fed.servername
+                + ","
+                + self.cfg.fed.args.optim
+                + "\n"
+            )

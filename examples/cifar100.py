@@ -1,20 +1,29 @@
+import os
 import time
 
 import numpy as np
 import torch
+
 import torchvision
 import torchvision.transforms as transforms
-import os
 
-from models.utils import get_model
 from appfl.config import *
 from appfl.misc.data import *
 from appfl.misc.utils import *
-from models.cnn import *
-import appfl.run_grpc_server as grpc_server
-import appfl.run_grpc_client as grpc_client
+from models.utils import get_model
+
+from appfl.config.config import FedAsync, Federated, ICEADMM, IIADMM
+
+import appfl.run_serial as rs
+import appfl.run_mpi as rm
 from mpi4py import MPI
+
 import argparse
+
+import torch.optim as optim
+import logging
+from torch.utils.data import DataLoader
+from torchvision.models import alexnet
 
 
 """ read arguments """
@@ -24,9 +33,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--device", type=str, default="mps")
 
 ## dataset and model
-parser.add_argument("--dataset", type=str, default="CIFAR10")
+parser.add_argument("--dataset", type=str, default="CIFAR100")
 parser.add_argument("--num_channel", type=int, default=3)
-parser.add_argument("--num_classes", type=int, default=10)
+parser.add_argument("--num_classes", type=int, default=100)
 parser.add_argument("--num_pixel", type=int, default=32)
 parser.add_argument("--model", type=str, default="AlexNetCIFAR")
 parser.add_argument("--pretrained", type=int, default=0)
@@ -79,7 +88,10 @@ parser.add_argument("--pruning_threshold", type=float, default=0.01)
 
 args = parser.parse_args()
 
-args.save_model_state_dict = True
+args.save_model_state_dict = False
+
+if torch.cuda.is_available():
+    args.device = "cuda"
 
 
 def get_data():
@@ -98,11 +110,11 @@ def get_data():
     )
 
     # Load test data
-    test_dataset = torchvision.datasets.CIFAR10(
+    test_dataset = torchvision.datasets.CIFAR100(
         dir, train=False, download=True, transform=transform
     )
 
-    train_dataset = torchvision.datasets.CIFAR10(
+    train_dataset = torchvision.datasets.CIFAR100(
         dir, train=True, download=True, transform=transform
     )
 
@@ -120,6 +132,7 @@ def get_data():
     return train_dataset_splits, test_dataset
 
 
+## Run
 def main():
     comm = MPI.COMM_WORLD
     comm_rank = comm.Get_rank()
@@ -156,6 +169,7 @@ def main():
 
     ## clients
     cfg.num_clients = args.num_clients
+    cfg.fed = eval(args.federation_type)
     cfg.fed.args.optim = args.client_optimizer
     cfg.fed.args.optim_args.lr = args.client_lr
     cfg.fed.args.num_local_epochs = args.num_local_epochs
@@ -224,37 +238,36 @@ def main():
         cfg.save_model_dirname = "./save_models"
         cfg.save_model_filename = "Model"
 
+    # cfg.summary_file = cfg.output_dirname + "/Summary_%s.txt" %(args.dataset)
+
+    """ Running """
     if comm_size > 1:
-        # Try to launch both a server and clients.
         if comm_rank == 0:
-            grpc_server.run_server(
-                cfg=cfg,
-                model=model,
-                loss_fn=loss_fn,
-                num_clients=cfg.num_clients,
-                test_data=test_dataset,
+            rm.run_server(
+                cfg, comm, model, loss_fn, args.num_clients, test_dataset, args.dataset
             )
         else:
-            grpc_client.run_client(
-                cfg=cfg,
-                cid=comm_rank - 1,
-                model=model,
-                loss_fn=loss_fn,
-                train_data=train_datasets[comm_rank - 1],
-                gpu_id=comm_rank,
-                test_data=test_dataset,
+            rm.run_client(
+                cfg,
+                comm,
+                model,
+                loss_fn,
+                args.num_clients,
+                train_datasets,
+                test_dataset,
             )
         print("------DONE------", comm_rank)
     else:
-        # Just launch a server.
-        grpc_server.run_server(
-            cfg=cfg,
-            model=model,
-            loss_fn=loss_fn,
-            num_clients=cfg.num_clients,
-            test_data=test_dataset,
-        )
+        rs.run_serial(cfg, model, loss_fn, train_datasets, test_dataset, args.dataset)
 
 
 if __name__ == "__main__":
     main()
+
+
+# To run CUDA-aware MPI:
+# mpiexec -np 2 --mca opal_cuda_support 1 python ./cifar10.py
+# To run MPI:
+# mpiexec -np 2 python ./cifar10.py
+# To run:
+# python ./cifar10.py

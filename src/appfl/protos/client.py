@@ -12,12 +12,14 @@ from appfl.protos.utils import *
 class FLClient:
     def __init__(
         self,
+        cfg,
         client_id,
         server_uri,
         use_tls,
-        max_message_size=2 * 1024 * 1024,
+        max_message_size=1024 * 1024 * 1024,
         api_key=None,
     ):
+        self.cfg = cfg
         self.logger = logging.getLogger(__name__)
         self.client_id = client_id
         self.max_message_size = max_message_size
@@ -90,12 +92,26 @@ class FLClient:
         return response.weight
 
     def send_learning_results(self, penalty, primal, dual, round_number):
-        primal_tensors = [
-            construct_tensor_record(k, np.array(v.cpu())) for k, v in primal.items()
-        ]
-        dual_tensors = [
-            construct_tensor_record(k, np.array(v.cpu())) for k, v in dual.items()
-        ]
+        if self.cfg.compressed_weights_client:
+            primal_tensors = [
+                construct_compressed_tensor_record("primal", primal, self.cfg)
+            ]
+            if dual == OrderedDict():
+                dual_tensors = [
+                    construct_tensor_record(k, np.array(v.cpu()))
+                    for k, v in dual.items()
+                ]
+            else:
+                dual_tensors = [
+                    construct_compressed_tensor_record("dual", dual, self.cfg)
+                ]
+        else:
+            primal_tensors = [
+                construct_tensor_record(k, np.array(v.cpu())) for k, v in primal.items()
+            ]
+            dual_tensors = [
+                construct_tensor_record(k, np.array(v.cpu())) for k, v in dual.items()
+            ]
         proto = LearningResults(
             header=self.header,
             round_number=round_number,

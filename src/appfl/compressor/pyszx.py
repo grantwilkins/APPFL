@@ -103,7 +103,7 @@ class SZx:
         self.szx.SZ_fast_decompress.restype = ctypes.POINTER(
             ctypes.c_float if original_dtype == np.float32 else ctypes.c_double
         )
-        fast_mode = 1
+        fast_mode = 2
         data_dec_c = self.szx.SZ_fast_decompress(
             fast_mode,
             ori_type,
@@ -136,7 +136,7 @@ class SZx:
         cmpr_size = ctypes.c_ulong()
         r5, r4, r3, r2, r1 = [0] * (5 - len(data.shape)) + list(data.shape)
         datatype, datap = self.__sz_datatype(data.dtype, data)
-        fast_mode = 1
+        fast_mode = 2
         data_cmpr_c = self.szx.SZ_fast_compress_args(
             fast_mode,
             datatype,

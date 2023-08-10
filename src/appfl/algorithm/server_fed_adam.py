@@ -31,7 +31,6 @@ class ServerFedAdam(FedServer):
 
         if cfg.summary_file != "":
             with open(cfg.summary_file, "a") as f:
-
                 f.write(
                     cfg.logginginfo.DataSet_name
                     + " FedAdam ClientLR "

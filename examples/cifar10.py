@@ -12,6 +12,8 @@ from appfl.misc.data import *
 from appfl.misc.utils import *
 from models.utils import get_model
 
+from appfl.config.config import FedAsync, Federated, ICEADMM, IIADMM
+
 import appfl.run_serial as rs
 import appfl.run_mpi as rm
 from mpi4py import MPI
@@ -112,15 +114,21 @@ def get_data():
         dir, train=False, download=True, transform=transform
     )
 
-    # Load train data
     train_dataset = torchvision.datasets.CIFAR10(
         dir, train=True, download=True, transform=transform
     )
 
-    # Split train data for multiple clients
-    train_dataset_splits = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // args.num_clients] * args.num_clients
+    train_length = len(train_dataset)
+    per_client_length = train_length // args.num_clients
+    remainder = train_length % args.num_clients
+
+    # The first 'remainder' splits have length 'per_client_length+1', the rest have length 'per_client_length'
+    lengths = [per_client_length + 1] * remainder + [per_client_length] * (
+        args.num_clients - remainder
     )
+
+    train_dataset_splits = torch.utils.data.random_split(train_dataset, lengths)
+
     return train_dataset_splits, test_dataset
 
 
@@ -142,7 +150,15 @@ def main():
     cfg.compressed_weights_client = args.compressed_client
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
-    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    if args.compressor == "SZ2":
+        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+    elif args.compressor == "SZx":
+        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
+    else:
+        cfg.compressor_lib_path = (
+            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+        )
+
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode
     cfg.pruning = args.pruning
@@ -161,6 +177,7 @@ def main():
 
     ## clients
     cfg.num_clients = args.num_clients
+    cfg.fed = eval(args.federation_type)
     cfg.fed.args.optim = args.client_optimizer
     cfg.fed.args.optim_args.lr = args.client_lr
     cfg.fed.args.num_local_epochs = args.num_local_epochs

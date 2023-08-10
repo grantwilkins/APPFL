@@ -179,8 +179,8 @@ class Compressor:
 
     def verify(self, ori_data, dec_data) -> Tuple[float, ...]:
         if self.cfg.compressor == "SZ3" or "SZ2":
-            if compressor is None:
-                compressor = pysz.SZ(szpath=self.cfg.compressor_lib_path)
-            return compressor.verify(ori_data, dec_data)
+            return pysz.SZ(szpath=self.cfg.compressor_lib_path).verify(
+                ori_data, dec_data
+            )
         else:
             raise NotImplementedError
