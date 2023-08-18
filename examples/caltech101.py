@@ -51,7 +51,7 @@ parser.add_argument("--server_lr", type=float, required=False)
 parser.add_argument("--mparam_1", type=float, required=False)
 parser.add_argument("--mparam_2", type=float, required=False)
 parser.add_argument("--adapt_param", type=float, required=False)
-
+parser.add_argument("--param_cutoff", type=float, default=1024)
 ## compression
 parser.add_argument("--error_bound", type=float, required=False, default=0.1)
 # parser.add_argument("--compressed_client", type=bool, required=False, default=False)
@@ -149,7 +149,7 @@ def main():
     cfg.reproduce = True
     if cfg.reproduce == True:
         set_seed(1)
-
+    cfg.param_cutoff = int(args.param_cutoff)
     cfg.device = args.device
     cfg.num_clients = args.num_clients
     cfg.num_epochs = args.num_epochs

@@ -937,3 +937,6 @@ examples/weights_50.txt
 examples/*pth
 examples/plots/*
 examples/data/*
+examples/save_temp/*
+*.pt
+*.pth

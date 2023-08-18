@@ -152,7 +152,7 @@ def unflatten_model_params(model: torch.nn.Module, flat_params: np.ndarray):
 
 def flatten_model_params(model: torch.nn.Module) -> np.ndarray:
     # Concatenate all of the tensors in the model's state_dict into a 1D tensor
-    flat_params = torch.cat([param.view(-1) for _, param in model.named_parameters()])
+    flat_params = torch.cat([param.view(-1) for _, param in model.state_dict().items()])
     # Convert the tensor to a numpy array and return it
     return flat_params.detach().cpu().numpy()
 

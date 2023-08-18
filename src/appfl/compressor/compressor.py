@@ -1,3 +1,6 @@
+from collections import OrderedDict
+from copy import deepcopy
+import zlib
 from . import pysz
 from ..config import Config
 from typing import Tuple, Any
@@ -5,6 +8,13 @@ import numpy as np
 import pickle
 from . import pyszx
 import zfpy
+import scipy.sparse as sparse
+import zstd
+import torch.nn as nn
+import torch
+import xz
+import gzip
+import blosc
 
 
 class Compressor:
@@ -19,6 +29,8 @@ class Compressor:
             "NORM": 5,
             "PW_REL": 10,
         }
+        self.lossless_compressor = cfg.lossless_compressor
+        self.compression_layers = []
 
     def compress(self, ori_data: np.ndarray):
         """
@@ -94,6 +106,152 @@ class Compressor:
             return pickle.dumps(dict_weights)
         else:
             raise NotImplementedError
+
+    def compress_model(
+        self, model: nn.Module, param_count_threshold: int
+    ) -> (bytes, int):
+        compressed_weights = {}
+        lossy_compressed_size = 0
+        lossy_original_size = 0
+        lossy_elements = 0
+        lossless_compressed_size = 0
+        lossless_original_size = 0
+        for name, param in model.state_dict().items():
+            param_flat = param.flatten().detach().cpu().numpy()
+            if "weight" in name and param_flat.size > param_count_threshold:
+                lossy_original_size += param_flat.size * 4
+                lossy_elements += param_flat.size
+                if self.cfg.pruning:
+                    sparse_arr = sparse.coo_matrix(param_flat.reshape(1, -1))
+                    sparse_data = sparse_arr.data
+                    sparse_row = sparse_arr.row
+                    sparse_col = sparse_arr.col
+                    if sparse_data.size != 0:
+                        compressed_weights[name] = self.compress(ori_data=sparse_data)
+                        compressed_weights[name + "_row"] = zstd.compress(
+                            sparse_row, 10
+                        )
+                        compressed_weights[name + "_col"] = zstd.compress(
+                            sparse_col, 10
+                        )
+                        compressed_weights[name + "_shape"] = sparse_data.shape
+                    lossy_compressed_size += (
+                        len(compressed_weights[name])
+                        + len(compressed_weights[name + "_row"])
+                        + len(compressed_weights[name + "_col"])
+                        + len(compressed_weights[name + "_shape"])
+                    )
+                else:
+                    compressed_weights[name] = self.compress(ori_data=param_flat)
+                    lossy_compressed_size += len(compressed_weights[name])
+            else:
+                lossless_original_size += param_flat.size * 4
+                lossless = b""
+                if self.lossless_compressor == "zstd":
+                    lossless = zstd.compress(param_flat, 10)
+                elif self.lossless_compressor == "xz":
+                    lossless = xz.compress(param_flat.tobytes())
+                elif self.lossless_compressor == "gzip":
+                    lossless = gzip.compress(param_flat.tobytes())
+                elif self.lossless_compressor == "zlib":
+                    lossless = zlib.compress(param_flat.tobytes())
+                elif self.lossless_compressor == "blosc":
+                    lossless = blosc.compress(param_flat.tobytes(), typesize=4)
+                else:
+                    raise NotImplementedError
+                lossless_compressed_size += len(lossless)
+                compressed_weights[name] = lossless
+        if lossy_compressed_size != 0:
+            print(
+                "Lossy Compression Ratio: "
+                + str(lossy_original_size / lossy_compressed_size)
+            )
+        print(
+            "Total Compression Ratio: "
+            + str(
+                (lossy_original_size + lossless_original_size)
+                / (lossy_compressed_size + lossless_compressed_size)
+            )
+        )
+        print(
+            "Lossless Compression Ratio: "
+            + str(lossless_original_size / lossless_compressed_size)
+        )
+        return (
+            pickle.dumps(compressed_weights),
+            lossy_elements,
+        )
+
+    def decompress_model(
+        self, compressed_model: bytes, model: nn.Module, param_count_threshold
+    ) -> nn.Module:
+        model_copy = deepcopy(model)
+        new_dict = OrderedDict()
+        decomp_weights = pickle.loads(compressed_model)
+        for name, param in model_copy.state_dict().items():
+            if "weight" in name and param.numel() > param_count_threshold:
+                if self.cfg.pruning:
+                    shape = decomp_weights[name + "_shape"]
+                    decomp_weights[name] = self.decompress(
+                        cmp_data=decomp_weights[name],
+                        ori_shape=shape,
+                        ori_dtype=np.float32,
+                    )
+                    decomp_weights[name + "_row"] = np.frombuffer(
+                        zstd.decompress(decomp_weights[name + "_row"]), dtype=np.int32
+                    )
+                    decomp_weights[name + "_col"] = np.frombuffer(
+                        zstd.decompress(decomp_weights[name + "_col"]), dtype=np.int32
+                    )
+                    csr_arr = (
+                        sparse.coo_matrix(
+                            (
+                                decomp_weights[name],
+                                (
+                                    decomp_weights[name + "_row"],
+                                    decomp_weights[name + "_col"],
+                                ),
+                            ),
+                            shape=(1, param.numel()),
+                        )
+                        .toarray()
+                        .reshape(-1)
+                    ).astype(np.float32)
+                    decomp_weights[name] = csr_arr
+                else:
+                    decomp_weights[name] = self.decompress(
+                        cmp_data=decomp_weights[name],
+                        ori_shape=param.shape,
+                        ori_dtype=np.float32,
+                    )
+            else:
+                if self.lossless_compressor == "zstd":
+                    decomp_weights[name] = zstd.decompress(decomp_weights[name])
+                elif self.lossless_compressor == "xz":
+                    decomp_weights[name] = xz.decompress(decomp_weights[name])
+                elif self.lossless_compressor == "gzip":
+                    decomp_weights[name] = gzip.decompress(decomp_weights[name])
+                elif self.lossless_compressor == "zlib":
+                    decomp_weights[name] = zlib.decompress(decomp_weights[name])
+                elif self.lossless_compressor == "blosc":
+                    decomp_weights[name] = blosc.decompress(
+                        decomp_weights[name], as_bytearray=True
+                    )
+                else:
+                    raise NotImplementedError
+                decomp_weights[name] = np.frombuffer(
+                    decomp_weights[name], dtype=np.float32
+                )
+            if param.shape == torch.Size([]):
+                copy_arr = deepcopy(decomp_weights[name])
+                copy_tensor = torch.from_numpy(copy_arr)
+                new_dict[name] = torch.tensor(copy_tensor)
+            else:
+                copy_arr = deepcopy(decomp_weights[name])
+                copy_tensor = torch.from_numpy(copy_arr)
+                new_dict[name] = copy_tensor.reshape(param.shape)
+        model_copy.load_state_dict(new_dict)
+        return model_copy
 
     def compress_error_control(
         self, ori_data: np.ndarray, error_bound: float, error_mode: str

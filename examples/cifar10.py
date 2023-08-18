@@ -37,7 +37,7 @@ parser.add_argument("--dataset", type=str, default="CIFAR10")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=32)
-parser.add_argument("--model", type=str, default="AlexNetCIFAR")
+parser.add_argument("--model", type=str, default="MobileNetV2")
 parser.add_argument("--pretrained", type=int, default=0)
 parser.add_argument("--train_data_batch_size", type=int, default=128)
 parser.add_argument("--test_data_batch_size", type=int, default=128)
@@ -62,7 +62,7 @@ parser.add_argument("--mparam_2", type=float, required=False)
 parser.add_argument("--adapt_param", type=float, required=False)
 
 ## compression
-parser.add_argument("--error_bound", type=float, required=False, default=0.1)
+parser.add_argument("--error_bound", type=float, required=False, default=0.01)
 # parser.add_argument("--compressed_client", type=bool, required=False, default=False)
 parser.add_argument(
     "--compressed_client",
@@ -85,6 +85,7 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument("--pruning_threshold", type=float, default=0.01)
+parser.add_argument("--param_cutoff", type=float, default=1024)
 
 args = parser.parse_args()
 
@@ -98,11 +99,20 @@ def get_data():
     dir = os.getcwd() + "/datasets/RawData"
 
     normalize = transforms.Normalize(
-        mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
+        mean=[0.4914, 0.4822, 0.4465], std=[0.2471, 0.2435, 0.2616]
     )
 
     # Define common transform for train and test data
-    transform = transforms.Compose(
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
+
+    test_transform = transforms.Compose(
         [
             transforms.ToTensor(),
             normalize,
@@ -111,11 +121,11 @@ def get_data():
 
     # Load test data
     test_dataset = torchvision.datasets.CIFAR10(
-        dir, train=False, download=True, transform=transform
+        dir, train=False, download=True, transform=test_transform
     )
 
     train_dataset = torchvision.datasets.CIFAR10(
-        dir, train=True, download=True, transform=transform
+        dir, train=True, download=True, transform=train_transform
     )
 
     train_length = len(train_dataset)
@@ -177,7 +187,7 @@ def main():
 
     ## clients
     cfg.num_clients = args.num_clients
-    cfg.fed = eval(args.federation_type)
+    cfg.fed = eval(args.federation_type + "()")
     cfg.fed.args.optim = args.client_optimizer
     cfg.fed.args.optim_args.lr = args.client_lr
     cfg.fed.args.num_local_epochs = args.num_local_epochs
@@ -218,7 +228,7 @@ def main():
     """ User-defined model """
     model = get_model(args)
     loss_fn = torch.nn.CrossEntropyLoss()
-
+    cfg.param_cutoff = int(args.param_cutoff)
     ## loading models
     cfg.load_model = False
     if cfg.load_model == True:

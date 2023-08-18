@@ -183,7 +183,19 @@ class ClientOptim(BaseClient):
         start_time = time.time()
         compression_ratio = 0
         flat_params = utils.flatten_model_params(self.model)
+        percent_lossy = 0
         if self.cfg.compressed_weights_client == True:
+            (
+                compressed_weights_client_arr,
+                num_lossy_elem,
+            ) = self.compressor.compress_model(
+                model=self.model, param_count_threshold=self.cfg.param_cutoff
+            )
+            compression_ratio = (len(flat_params) * 4) / (
+                len(compressed_weights_client_arr)
+            )
+            percent_lossy = num_lossy_elem * 100 / len(flat_params)
+            """
             compressed_weights_client_arr = self.compressor.compress(
                 ori_data=flat_params
             )
@@ -191,6 +203,7 @@ class ClientOptim(BaseClient):
             compression_ratio = (len(flat_params) * 4) / (
                 len(compressed_weights_client_arr)
             )
+            """
 
         compress_time = time.time() - start_time
         stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
@@ -214,6 +227,8 @@ class ClientOptim(BaseClient):
                 + ","
                 + str(compression_ratio)
                 + ","
+                + str(percent_lossy)
+                + ","
                 + self.cfg.compressor
                 + ","
                 + self.cfg.compressor_error_mode
@@ -233,6 +248,8 @@ class ClientOptim(BaseClient):
                 + str(np.median(flat_params))
                 + ","
                 + str(np.mean(flat_params))
+                + ","
+                + str(np.max(flat_params) - np.min(flat_params))
                 + ","
             )
 

@@ -245,14 +245,11 @@ class IIADMMClient(BaseClient):
         start_time = time.time()
         compression_ratio = 0
         flat_primal = flatten_primal_or_dual(self.primal_state)
-        flat_dual = flatten_primal_or_dual(self.dual_state)
+        percent_lossy = 0
         if self.cfg.compressed_weights_client == True:
             compressed_primal = self.compressor.compress(ori_data=flat_primal)
-            compressed_dual = self.compressor.compress(ori_data=flat_dual)
-            self.cfg.flat_model_size = flat_primal.shape
-            compression_ratio = (len(flat_primal) * 8) / (
-                len(compressed_dual) + len(compressed_primal)
-            )
+            percent_lossy = 100
+            compression_ratio = (len(flat_primal) * 4) / (len(compressed_primal))
         compress_time = time.time() - start_time
 
         stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
@@ -276,6 +273,8 @@ class IIADMMClient(BaseClient):
                 + ","
                 + str(compression_ratio)
                 + ","
+                + str(percent_lossy)
+                + ","
                 + self.cfg.compressor
                 + ","
                 + self.cfg.compressor_error_mode
@@ -296,15 +295,15 @@ class IIADMMClient(BaseClient):
                 + ","
                 + str(np.mean(flat_primal))
                 + ","
+                + str(np.max(flat_primal) - np.min(flat_primal))
+                + ","
             )
         """ Update local_state """
         self.local_state = OrderedDict()
         self.local_state["primal"] = self.primal_state
         if self.cfg.compressed_weights_client == True:
             self.local_state["primal"] = compressed_primal
-        self.local_state["dual"] = self.dual_state
-        if self.cfg.compressed_weights_client == True:
-            self.local_state["dual"] = compressed_dual
+        self.local_state["dual"] = OrderedDict()
         self.local_state["penalty"] = OrderedDict()
         self.local_state["penalty"][self.id] = self.penalty
 

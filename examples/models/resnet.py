@@ -10,14 +10,14 @@ from torchvision.transforms._presets import ImageClassification
 from functools import partial
 
 
-class ResNet(models.resnet.ResNet):
+class ResNetClass(models.resnet.ResNet):
     # ResNet 18 Architecture Implementation to adapt grayscale and 28 X 28 pixel size input
     def __init__(self, block, layers, num_classes, grayscale):
         if grayscale:
             in_dim = 1
         else:
             in_dim = 3
-        super(ResNet, self).__init__(block, layers)
+        super(ResNetClass, self).__init__(block, layers)
         self.inplanes = 64
         self.conv1 = nn.Conv2d(
             in_dim, 64, kernel_size=7, stride=2, padding=3, bias=False
@@ -88,7 +88,7 @@ def ResNet18(num_channel, num_classes=-1, pretrained=0):
         if num_classes < 0 or pretrained > 0:
             weights = ResNet18_Weights.verify(ResNet18_Weights.IMAGENET1K_V1)
             num_classes = len(weights.meta["categories"])
-            model = ResNet(
+            model = ResNetClass(
                 block=BasicBlock,
                 layers=[2, 2, 2, 2],
                 num_classes=num_classes,
@@ -96,7 +96,7 @@ def ResNet18(num_channel, num_classes=-1, pretrained=0):
             )
             model.load_state_dict(weights.get_state_dict(progress=True))
         else:
-            model = ResNet(
+            model = ResNetClass(
                 block=BasicBlock,
                 layers=[2, 2, 2, 2],
                 num_classes=num_classes,

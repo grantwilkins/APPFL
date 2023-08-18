@@ -104,3 +104,5 @@ class Config:
     flat_model_dtype: str = "np.float32"
     pruning: bool = False
     pruning_threshold: float = 0.01
+    param_cutoff: int = 1024
+    lossless_compressor: str = "blosc"

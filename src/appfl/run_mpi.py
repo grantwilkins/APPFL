@@ -151,8 +151,23 @@ def run_server(
         decompress_times = [0.0 for i in range(num_clients)]
         if cfg.compressed_weights_client == True:
             for local_state in local_states:
-                ori_dtype = eval(cfg.flat_model_dtype)
                 decompress_time_start = time.time()
+                if cfg.fed.servername == "IIADMMServer":
+                    local_state["primal"] = utils.unflatten_model_params(
+                        model,
+                        compressor.decompress(
+                            cmp_data=local_state["primal"],
+                            ori_shape=ori_shape,
+                            ori_dtype=np.float32,
+                        ),
+                    )
+                else:
+                    local_state["primal"] = compressor.decompress_model(
+                        local_state["primal"], model, cfg.param_cutoff
+                    ).state_dict()
+                decompress_times.append(time.time() - decompress_time_start)
+                """
+                ori_dtype = eval(cfg.flat_model_dtype)
                 copy_arr = compressor.decompress(
                     cmp_data=local_state["primal"],
                     ori_shape=ori_shape,
@@ -172,7 +187,7 @@ def run_server(
                         model=model, flat_params=copy_arr
                     )
                     local_state["dual"] = new_state_dic
-                decompress_times.append(time.time() - decompress_time_start)
+                """
         # print("Start Server Update")
 
         global_update_start = time.time()

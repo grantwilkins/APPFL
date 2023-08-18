@@ -10,6 +10,9 @@ from torchvision.models.resnet import BasicBlock, ResNet18_Weights
 from torchvision import *
 from torch.sparse import *
 import zstd
+import pickle
+from scipy import sparse
+import time
 
 
 class CNN(nn.Module):
@@ -249,32 +252,60 @@ def magnitude_prune(model: nn.Module, prune_ratio: float):
     return model_copy
 
 
-def test_model_compress(cfg: Config) -> None:
+def flatten_too(model: torch.nn.Module) -> np.ndarray:
+    # Concatenate all of the tensors in the model's state_dict into a 1D tensor
+    flat_params = [
+        param.view(-1).detach().cpu().numpy() for _, param in model.named_parameters()
+    ]
+    max_length = max(param.size for param in flat_params)
+    padded_params = [
+        np.pad(param, (0, max_length - param.size)) for param in flat_params
+    ]
+    double_array = np.stack(padded_params)
+
+    # Convert the tensor to a numpy array and return it
+    return double_array
+
+
+def unflatten_too(model: torch.nn.Module, flat_params):
+    i = 0
+    model_copy = copy.deepcopy(model)
+    for _, param in model_copy.named_parameters():
+        param = flat_params[i, : np.prod(param.shape)].reshape(param.shape)
+        i = i + 1
+    return model_copy.state_dict()
+
+
+def flatten_too_too(model: torch.nn.Module):
+    flat_dict = {}
+    for name, param in model.named_parameters():
+        flat_dict[name] = param.view(-1).detach().cpu().numpy()
+    return flat_dict
+
+
+def test_model_compress(cfg: Config, model: nn.Module) -> None:
     # Create a compressor
     compressor = Compressor(cfg)
     # Define the AlexNetMNIST model
-    model = AlexNetMNIST(num_channel=1, num_classes=10, num_pixel=28)
+    # model = resnet18(num_channel=1, num_classes=10, pretrained=1)
+    # model = AlexNetMNIST(num_channel=3, num_classes=10, num_pixel=32)
+    # model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
     model_copy = copy.deepcopy(model)
-    pruned_model = magnitude_prune(model, 0.5)
-
-    params = my_utils.flatten_model_params(pruned_model)
-    ori_shape = params.shape
-    ori_dtype = params.dtype
-    zstd_params = zstd.compress(params.tobytes(), 20)
-    # Compress the model
-    cmpr_params_bytes = compressor.compress(ori_data=params)
-
-    print(4 * len(params) / (len(cmpr_params_bytes)))
-    print(4 * len(params) / (len(zstd_params)))
-    # Decompress the model
-    dec_params = compressor.decompress(
-        cmp_data=cmpr_params_bytes, ori_shape=ori_shape, ori_dtype=ori_dtype
+    # pruned_model = magnitude_prune(model, 0.5)
+    # Flatten the model parameters)
+    compressed_weights = {}
+    weights_size = 0
+    size = 0
+    time1 = time.time()
+    (comp_model, _, lossless_comp_ratio) = compressor.compress_model(model, 1e10)
+    decomp_model = compressor.decompress_model(
+        compressed_model=comp_model, model=model, param_count_threshold=1e10
     )
-    # Check if the decompressed model is the same as the original model
-    (_, _, _) = compressor.verify(ori_data=params, dec_data=dec_params)
+    time2 = time.time() - time1
+    print(time2, lossless_comp_ratio)
+    print("Score = " + str(lossless_comp_ratio / time2))
 
     # Reasseble the model
-    my_utils.unflatten_model_params(model, dec_params)
     # Check if the reassembled model is the same shape as the original model
     for p, p_copy in zip(model.parameters(), model_copy.parameters()):
         assert p.shape == p_copy.shape
@@ -284,12 +315,17 @@ if __name__ == "__main__":
     # Config setup
     cfg = OmegaConf.structured(Config)
     cfg.compressed_weights_client = True
-    cfg.compressor = "Prune"
-    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+    cfg.compressor = "SZ2"
+    cfg.lossless_compressor = "blosc"
+    cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
     # cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
     cfg.compressor_error_bound = 0.1
     cfg.compressor_error_mode = "REL"
-
-    # Tests to run
-    test_basic_compress(cfg=cfg)
-    test_model_compress(cfg=cfg)
+    compressors = ["blosc", "zstd", "zlib", "gzip", "xz"]
+    models_test = [
+        models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1),
+    ]
+    for model in models_test:
+        for compressor in compressors:
+            cfg.lossless_compressor = compressor
+            test_model_compress(cfg=cfg, model=model)

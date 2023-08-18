@@ -74,6 +74,7 @@ parser.add_argument(
     required=False,
     default=False,
 )
+parser.add_argument("--param_cutoff", type=float, default=1024)
 parser.add_argument("--pruning_threshold", type=float, default=0.5)
 
 args = parser.parse_args()
@@ -136,6 +137,7 @@ def main():
     cfg.compressor_error_mode = args.compressor_error_mode
     cfg.pruning = args.pruning
     cfg.pruning_threshold = args.pruning_threshold
+    cfg.param_cutoff = int(args.param_cutoff)
     start_time = time.time()
 
     train_datasets, test_dataset = get_data()

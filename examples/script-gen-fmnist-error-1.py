@@ -7,8 +7,6 @@ import numpy as np
 
 error_bounds = [1e-1, 5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
 
-pruning_thresholds = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8]
-
 num_client = 1
 
 num_epochs = 10
@@ -19,7 +17,7 @@ server_algorithm = "ServerFedAvg"
 
 federation_type = "Federated"
 
-models = ["MobileNetV2", "ResNet50"]
+models = ["AlexNetMNIST", "MobileNetV2", "ResNet50"]
 
 for model in models:
     print(
@@ -35,16 +33,15 @@ for model in models:
             num_local_epochs,
         )
     )
-    for error_bound, pruning_threshold in zip(error_bounds, pruning_thresholds):
+    for error_bound in error_bounds:
         print(
-            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --federation_type %s --num_local_epochs %d"
+            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --model %s --federation_type %s --num_local_epochs %d"
             % (
                 num_client + 1,
                 server_algorithm,
                 error_bound,
                 num_client,
                 num_epochs,
-                pruning_threshold,
                 model,
                 federation_type,
                 num_local_epochs,
