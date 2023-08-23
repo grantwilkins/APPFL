@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
 from typing import Any, Tuple
 from omegaconf import DictConfig, OmegaConf
-
+import sys
 
 from .fed.federated import *
 from .fed.fedasync import *
 from .fed.iceadmm import *  ## TODO: combine iceadmm and iiadmm under the name of ADMM.
 from .fed.iiadmm import *
 import numpy as np
+import os
 
 
 @dataclass
@@ -98,6 +99,11 @@ class Config:
     compressed_weights_server: bool = False
     compressor: str = ""
     compressor_lib_path: str = ""
+    home = os.path.expanduser("~")
+    ext = ".dylib" if sys.platform.startswith("darwin") else ".so"
+    compressor_sz2_path: str = home + "/SZ/build/sz/libSZ" + ext
+    compressor_sz3_path: str = home + "/SZ3/build/tools/sz3c/libSZ3c" + ext
+    compressor_szx_path: str = home + "/SZx-main/build/lib/libSZx" + ext
     compressor_error_mode: str = ""
     compressor_error_bound: float = 0.0
     flat_model_size: Tuple[int, ...] = (0,)

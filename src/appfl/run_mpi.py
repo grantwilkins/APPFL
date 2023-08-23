@@ -263,7 +263,6 @@ def run_server(
 
     """ Summary """
     server.logging_summary(cfg, logger)
-
     do_continue = False
     do_continue = comm.bcast(do_continue, root=0)
 

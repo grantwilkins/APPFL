@@ -1,7 +1,7 @@
 from .cnn import CNN, ComplexCNN
 from .resnet import ResNet18, ResNet101, ResNet152, ResNet50
 from .alexnet import AlexNetMNIST, AlexNetCIFAR, AlexNetCaltech
-from .vgg import vgg16, vgg11_bn
+from .vgg import vgg16, VGG11_BN
 from .lenet5 import LeNet5
 from .mobilenet import MobileNetV2
 
@@ -19,7 +19,11 @@ def get_model(args):
     if args.model == "AlexNetCaltech":
         model = AlexNetCaltech(args.num_classes)
     if args.model == "VGG11_BN":
-        model = vgg11_bn(num_channel=args.num_channel, num_classes=args.num_classes)
+        model = VGG11_BN(
+            num_channels=args.num_channel,
+            num_classes=args.num_classes,
+            num_pixels=args.num_pixel,
+        )
     if args.model == "VGG16":
         model = vgg16(args.num_channel, args.num_classes)
     if args.model == "LeNet5":

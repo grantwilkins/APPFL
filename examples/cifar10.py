@@ -160,14 +160,6 @@ def main():
     cfg.compressed_weights_client = args.compressed_client
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
-    if args.compressor == "SZ2":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
-    elif args.compressor == "SZx":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
-    else:
-        cfg.compressor_lib_path = (
-            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
-        )
 
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode

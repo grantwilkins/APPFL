@@ -12,9 +12,9 @@ import scipy.sparse as sparse
 import zstd
 import torch.nn as nn
 import torch
-import xz
 import gzip
 import blosc
+import lzma
 
 
 class Compressor:
@@ -31,6 +31,12 @@ class Compressor:
         }
         self.lossless_compressor = cfg.lossless_compressor
         self.compression_layers = []
+        if self.cfg.compressor == "SZ3":
+            self.cfg.compressor_lib_path = self.cfg.compressor_sz3_path
+        elif self.cfg.compressor == "SZ2":
+            self.cfg.compressor_lib_path = self.cfg.compressor_sz2_path
+        elif self.cfg.compressor == "SZx":
+            self.cfg.compressor_lib_path = self.cfg.compressor_szx_path
 
     def compress(self, ori_data: np.ndarray):
         """
@@ -109,7 +115,7 @@ class Compressor:
 
     def compress_model(
         self, model: nn.Module, param_count_threshold: int
-    ) -> (bytes, int):
+    ) -> Tuple[bytes, int]:
         compressed_weights = {}
         lossy_compressed_size = 0
         lossy_original_size = 0
@@ -122,23 +128,24 @@ class Compressor:
                 lossy_original_size += param_flat.size * 4
                 lossy_elements += param_flat.size
                 if self.cfg.pruning:
-                    sparse_arr = sparse.coo_matrix(param_flat.reshape(1, -1))
+                    # Create a CSR matrix from the flattened parameter
+                    sparse_arr = sparse.csr_matrix(param_flat.reshape(1, -1))
                     sparse_data = sparse_arr.data
-                    sparse_row = sparse_arr.row
-                    sparse_col = sparse_arr.col
+                    sparse_indices = sparse_arr.indices
+                    sparse_indptr = sparse_arr.indptr
                     if sparse_data.size != 0:
                         compressed_weights[name] = self.compress(ori_data=sparse_data)
-                        compressed_weights[name + "_row"] = zstd.compress(
-                            sparse_row, 10
+                        compressed_weights[name + "_indices"] = zstd.compress(
+                            sparse_indices, 10
                         )
-                        compressed_weights[name + "_col"] = zstd.compress(
-                            sparse_col, 10
+                        compressed_weights[name + "_indptr"] = zstd.compress(
+                            sparse_indptr, 10
                         )
                         compressed_weights[name + "_shape"] = sparse_data.shape
                     lossy_compressed_size += (
                         len(compressed_weights[name])
-                        + len(compressed_weights[name + "_row"])
-                        + len(compressed_weights[name + "_col"])
+                        + len(compressed_weights[name + "_indices"])
+                        + len(compressed_weights[name + "_indptr"])
                         + len(compressed_weights[name + "_shape"])
                     )
                 else:
@@ -149,14 +156,14 @@ class Compressor:
                 lossless = b""
                 if self.lossless_compressor == "zstd":
                     lossless = zstd.compress(param_flat, 10)
-                elif self.lossless_compressor == "xz":
-                    lossless = xz.compress(param_flat.tobytes())
                 elif self.lossless_compressor == "gzip":
                     lossless = gzip.compress(param_flat.tobytes())
                 elif self.lossless_compressor == "zlib":
                     lossless = zlib.compress(param_flat.tobytes())
                 elif self.lossless_compressor == "blosc":
                     lossless = blosc.compress(param_flat.tobytes(), typesize=4)
+                elif self.lossless_compressor == "lzma":
+                    lossless = lzma.compress(param_flat.tobytes())
                 else:
                     raise NotImplementedError
                 lossless_compressed_size += len(lossless)
@@ -197,20 +204,20 @@ class Compressor:
                         ori_shape=shape,
                         ori_dtype=np.float32,
                     )
-                    decomp_weights[name + "_row"] = np.frombuffer(
-                        zstd.decompress(decomp_weights[name + "_row"]), dtype=np.int32
+                    decomp_weights[name + "_indices"] = np.frombuffer(
+                        zstd.decompress(decomp_weights[name + "_indices"]),
+                        dtype=np.int32,
                     )
-                    decomp_weights[name + "_col"] = np.frombuffer(
-                        zstd.decompress(decomp_weights[name + "_col"]), dtype=np.int32
+                    decomp_weights[name + "_indptr"] = np.frombuffer(
+                        zstd.decompress(decomp_weights[name + "_indptr"]),
+                        dtype=np.int32,
                     )
                     csr_arr = (
-                        sparse.coo_matrix(
+                        sparse.csr_matrix(
                             (
                                 decomp_weights[name],
-                                (
-                                    decomp_weights[name + "_row"],
-                                    decomp_weights[name + "_col"],
-                                ),
+                                decomp_weights[name + "_indices"],
+                                decomp_weights[name + "_indptr"],
                             ),
                             shape=(1, param.numel()),
                         )
@@ -227,8 +234,6 @@ class Compressor:
             else:
                 if self.lossless_compressor == "zstd":
                     decomp_weights[name] = zstd.decompress(decomp_weights[name])
-                elif self.lossless_compressor == "xz":
-                    decomp_weights[name] = xz.decompress(decomp_weights[name])
                 elif self.lossless_compressor == "gzip":
                     decomp_weights[name] = gzip.decompress(decomp_weights[name])
                 elif self.lossless_compressor == "zlib":
@@ -237,6 +242,8 @@ class Compressor:
                     decomp_weights[name] = blosc.decompress(
                         decomp_weights[name], as_bytearray=True
                     )
+                elif self.lossless_compressor == "lzma":
+                    decomp_weights[name] = lzma.decompress(decomp_weights[name])
                 else:
                     raise NotImplementedError
                 decomp_weights[name] = np.frombuffer(

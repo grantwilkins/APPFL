@@ -296,12 +296,21 @@ def test_model_compress(cfg: Config, model: nn.Module) -> None:
     compressed_weights = {}
     weights_size = 0
     size = 0
+    for name, param in model.state_dict().items():
+        size += param.numel() * 4
     time1 = time.time()
-    (comp_model, _, lossless_comp_ratio) = compressor.compress_model(model, 1e10)
-    decomp_model = compressor.decompress_model(
-        compressed_model=comp_model, model=model, param_count_threshold=1e10
-    )
+    (comp_model, _) = compressor.compress_model(model, 1e3)
     time2 = time.time() - time1
+    print(time2)
+    time1 = time.time()
+    (comp_model, _) = compressor.compress_model_too(model, 1e3)
+    time2 = time.time() - time1
+    print(time2)
+    lossless_comp_ratio = size / len(comp_model)
+    decomp_model = compressor.decompress_model(
+        compressed_model=comp_model, model=model, param_count_threshold=1e3
+    )
+
     print(time2, lossless_comp_ratio)
     print("Score = " + str(lossless_comp_ratio / time2))
 
@@ -315,15 +324,15 @@ if __name__ == "__main__":
     # Config setup
     cfg = OmegaConf.structured(Config)
     cfg.compressed_weights_client = True
-    cfg.compressor = "SZ2"
+    cfg.compressor = "SZ3"
     cfg.lossless_compressor = "blosc"
-    cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+    cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/sz3c/libSZ3c.dylib"
     # cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
-    cfg.compressor_error_bound = 0.1
+    cfg.compressor_error_bound = 0.01
     cfg.compressor_error_mode = "REL"
-    compressors = ["blosc", "zstd", "zlib", "gzip", "xz"]
+    compressors = ["zstd"]
     models_test = [
-        models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1),
+        models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1),
     ]
     for model in models_test:
         for compressor in compressors:
