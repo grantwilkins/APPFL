@@ -228,7 +228,7 @@ class Compressor:
                 else:
                     decomp_weights[name] = self.decompress(
                         cmp_data=decomp_weights[name],
-                        ori_shape=param.shape,
+                        ori_shape=(param.numel(),),
                         ori_dtype=np.float32,
                     )
             else:
