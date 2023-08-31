@@ -180,36 +180,15 @@ class FLOperator:
         decompress_time = 0.0
         if self.cfg.compressed_weights_client == True:
             compressor = Compressor(self.cfg)
-            if len(primal) != 1:
-                raise ValueError(
-                    "Compressed weights gRPC client only support one tensor in primal"
-                )
-            tensor = primal[0]
-            ori_dtype = eval(tensor.data_dtype)
-            ori_shape = flatten_model_params(self.model).shape
             decompress_time_start = time.time()
-            copy_arr = compressor.decompress(
-                cmp_data=tensor.data_bytes,
-                ori_shape=ori_shape,
-                ori_dtype=ori_dtype,
+            comp_model = primal[0]
+            decomp_model = compressor.decompress_model(
+                compressed_model=comp_model.data_bytes,
+                model=self.model,
+                param_count_threshold=self.cfg.param_cutoff,
             )
-            new_state_dic = utils.unflatten_model_params(
-                model=self.model, flat_params=copy_arr
-            )
-            primal_tensors = new_state_dic
-            if len(dual) == 1:
-                tensor = dual[0]
-                ori_dtype = eval(tensor.data_dtype)
-                ori_shape = tuple(tensor.data_shape)
-                copy_arr = compressor.decompress(
-                    cmp_data=tensor.data_bytes,
-                    ori_shape=ori_shape,
-                    ori_dtype=ori_dtype,
-                )
-                new_state_dic = utils.unflatten_model_params(
-                    model=self.model, flat_params=copy_arr
-                )
-                dual_tensors = new_state_dic
+            for name, param in decomp_model.state_dict().items():
+                primal_tensors[name] = param
             decompress_time = time.time() - decompress_time_start
         else:
             for tensor in primal:
@@ -218,12 +197,12 @@ class FLOperator:
                 flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
                 nparray = np.reshape(flat, newshape=shape, order="C")
                 primal_tensors[name] = torch.from_numpy(nparray)
-            for tensor in dual:
-                name = tensor.name
-                shape = tuple(tensor.data_shape)
-                flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
-                nparray = np.reshape(flat, newshape=shape, order="C")
-                dual_tensors[name] = torch.from_numpy(nparray)
+        for tensor in dual:
+            name = tensor.name
+            shape = tuple(tensor.data_shape)
+            flat = np.frombuffer(tensor.data_bytes, dtype=eval(tensor.data_dtype))
+            nparray = np.reshape(flat, newshape=shape, order="C")
+            dual_tensors[name] = torch.from_numpy(nparray)
         self.client_states[client_id]["primal"] = primal_tensors
         self.client_states[client_id]["dual"] = dual_tensors
         self.client_states[client_id]["penalty"] = OrderedDict()
@@ -274,5 +253,5 @@ class FLOperator:
                 + self.cfg.fed.servername
                 + ","
                 + self.cfg.fed.args.optim
-                + "\n"
+                + ","
             )

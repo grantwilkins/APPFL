@@ -370,6 +370,7 @@ def run_client(
             )
         """ Update "local_states" based on "global_state" """
         reqlist = []
+        start_time = 0
         for client in clients:
             cid = client.id
             ## initial point for a client model
@@ -377,10 +378,21 @@ def run_client(
 
             ## client update
             ls = client.update()
+            start_time = time.time()
             req = comm.isend(ls, dest=0, tag=cid)
             reqlist.append(req)
 
         MPI.Request.Waitall(reqlist)
+        comm_time = time.time() - start_time
+        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+            cfg.dataset,
+            cfg.model,
+            cfg.fed.servername,
+            cfg.compressor,
+            0,
+        )
+        with open(stats_file, "a") as f:
+            f.write(str(comm_time) + ",")
         do_continue = comm.bcast(None, root=0)
 
     for client in clients:

@@ -14,12 +14,12 @@ sns.set_context("paper")
 sns.set_style("whitegrid")
 plt.figure(figsize=(10, 4))
 
-mobilenet_model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V2)
-resnet_model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+mobilenet_model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1)
+resnet_model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
 alexnet_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
 
 models_dict = {
-    "MobileNet_V2": mobilenet_model,
+    "MobileNet-V2": mobilenet_model,
     "ResNet50": resnet_model,
     "AlexNet": alexnet_model,
 }
@@ -36,17 +36,27 @@ for model_name, model in models_dict.items():
 
 
 weights_df = pd.concat(weights_data)
-sns.histplot(
-    data=weights_df,
-    x="Weight",
-    hue="Model",
-    bins="sqrt",
-    kde=False,
-    stat="density",
-    palette="flare",
-    legend=True,
+g = sns.FacetGrid(
+    weights_df,
+    col="Model",
+    col_wrap=3,
+    sharex=False,
+    sharey=False,
 )
-plt.xlim(-0.25, 0.25)
-plt.xlabel("Weight Value")
+for (model_name, ax), bins in zip(g.axes_dict.items(), [250, 500, 1500]):
+    sns.histplot(
+        weights_df[weights_df["Model"] == model_name]["Weight"],
+        ax=ax,
+        bins=bins,
+        stat="density",
+    )
+    ax.set_title(model_name)
+    ax.set_xlabel("")
+ax = g.axes
+ax[0].set_xlim(-0.25, 0.25)
+ax[1].set_xlim(-0.075, 0.075)
+ax[1].set_xticks([-0.05, 0, 0.05])
+ax[2].set_xlim(-0.075, 0.075)
+ax[2].set_xticks([-0.05, 0, 0.05])
 plt.ylabel("Density")
-plt.savefig("histogram_difference.pdf")
+plt.savefig("weight-distribution.pdf")

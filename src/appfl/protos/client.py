@@ -96,22 +96,13 @@ class FLClient:
             primal_tensors = [
                 construct_compressed_tensor_record("primal", primal, self.cfg)
             ]
-            if dual == OrderedDict():
-                dual_tensors = [
-                    construct_tensor_record(k, np.array(v.cpu()))
-                    for k, v in dual.items()
-                ]
-            else:
-                dual_tensors = [
-                    construct_compressed_tensor_record("dual", dual, self.cfg)
-                ]
         else:
             primal_tensors = [
                 construct_tensor_record(k, np.array(v.cpu())) for k, v in primal.items()
             ]
-            dual_tensors = [
-                construct_tensor_record(k, np.array(v.cpu())) for k, v in dual.items()
-            ]
+        dual_tensors = [
+            construct_tensor_record(k, np.array(v.cpu())) for k, v in dual.items()
+        ]
         proto = LearningResults(
             header=self.header,
             round_number=round_number,
@@ -125,6 +116,15 @@ class FLClient:
         start = time.time()
         self.stub.SendLearningResults(iter(databuffer), metadata=self.metadata)
         end = time.time()
+        stats_file = "./data/stats_%s_%s_%s_%s_%d.csv" % (
+            self.cfg.dataset,
+            self.cfg.model,
+            self.cfg.fed.servername,
+            self.cfg.compressor,
+            0,
+        )
+        with open(stats_file, "a") as f:
+            f.write(str(end - start) + ",grpc" + "\n")
         if round_number > 1:
             self.time_send_results += end - start
 

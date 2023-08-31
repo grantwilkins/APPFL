@@ -7,44 +7,27 @@ import numpy as np
 
 error_bounds = [1e-2, 1e-3, 1e-4]
 
-num_client = 5
+num_epochs = 10
 
-num_epochs = 20
+model = "AlexNetCIFAR"
 
-server_algorithm = "ServerFedAvg"
-
-pruning_threshold = 0.5
-
-model = "AlexNetCaltech"
-
-compressors = ["SZ3", "SZx", "ZFP", "Prune"]
+compressors = [
+    "SZ3",
+    "SZ2",
+    "ZFP",
+]
 
 
-for compressor in compressors:
-    for error_bound in error_bounds:
-        print(
-            "mpiexec -np %d python3 ./caltech101.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --pruning --pruning_threshold %f --model %s --compressor %s"
-            % (
-                num_client + 1,
-                server_algorithm,
-                error_bound,
-                num_client,
-                num_epochs,
-                pruning_threshold,
-                model,
-                compressor,
+for repeat in range(5):
+    for compressor in compressors:
+        for error_bound in error_bounds:
+            print(
+                "mpiexec -np %d python3 ./cifar10.py --error_bound %f --num_epochs %d --compressed_client --model %s --compressor %s"
+                % (
+                    2,
+                    error_bound,
+                    num_epochs,
+                    model,
+                    compressor,
+                )
             )
-        )
-        print(
-            "mpiexec -np %d python3 ./caltech101.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --compressed_server --pruning --pruning_threshold %f --model %s --compressor %s"
-            % (
-                num_client + 1,
-                server_algorithm,
-                error_bound,
-                num_client,
-                num_epochs,
-                pruning_threshold,
-                model,
-                compressor,
-            )
-        )
