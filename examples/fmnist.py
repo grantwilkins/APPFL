@@ -102,10 +102,16 @@ def get_data():
     # Load train data
     train_dataset = FashionMNIST(dir, download=True, train=True, transform=transform)
 
-    # Split train data for multiple clients
-    train_dataset_splits = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // args.num_clients] * args.num_clients
+    train_length = len(train_dataset)
+    per_client_length = train_length // args.num_clients
+    remainder = train_length % args.num_clients
+
+    # The first 'remainder' splits have length 'per_client_length+1', the rest have length 'per_client_length'
+    lengths = [per_client_length + 1] * remainder + [per_client_length] * (
+        args.num_clients - remainder
     )
+    train_dataset_splits = torch.utils.data.random_split(train_dataset, lengths)
+
     return train_dataset_splits, test_dataset
 
 

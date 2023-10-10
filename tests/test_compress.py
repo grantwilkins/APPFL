@@ -91,7 +91,7 @@ def flatten(model: nn.Module):
 
 def test_model_compress(cfg: Config, model: nn.Module) -> None:
     # Create a compressor
-    compressor = Compressor(cfg)
+
     # Define the AlexNetMNIST model
     # model = resnet18(num_channel=1, num_classes=10, pretrained=1)
     # model = AlexNetMNIST(num_channel=3, num_classes=10, num_pixel=32)
@@ -99,28 +99,43 @@ def test_model_compress(cfg: Config, model: nn.Module) -> None:
     model_copy = copy.deepcopy(model)
     # pruned_model = magnitude_prune(model, 0.5)
     # Flatten the model parameters)
-    compressed_weights = {}
-    weights_size = 0
-    size = 0
-    flat_og = flatten_primal_or_dual(model.state_dict())
-    for name, param in model.state_dict().items():
-        size += param.numel() * 4
-    for p in [2**i for i in range(0, 22)]:
-        (comp_model, num_lossy) = compressor.compress_model(model, p)
-        print("%d Percent Lossy %f" % (p, num_lossy / flat_og.size))
+    differences = {}
+    for err in [0.5, 0.1, 0.05]:
+        cfg.compressor_error_bound = err
+        compressor = Compressor(cfg)
+        (comp_model, _) = compressor.compress_model(model, 0)
         decomp_model = compressor.decompress_model(
-            compressed_model=comp_model, model=model, param_count_threshold=p
+            compressed_model=comp_model, model=model, param_count_threshold=0
         )
+        flat_og = flatten(model)
+        flat_decomp = flatten(decomp_model)
+        diff = flat_og - flat_decomp
+        diff = diff[diff != 0]
+        differences[err] = diff
 
-    """
-    flat_decomp = flatten(decomp_model)
-    diff = flat_og - flat_decomp
-    diff = diff[diff != 0]
+    # Convert differences dictionary to DataFrame for seaborn
+    diff_df = pd.DataFrame.from_dict(differences, orient="index").T.melt(
+        var_name="REL Error Bound", value_name="difference"
+    )
     sns.set(style="ticks")
-    sns.set_context("paper")
-    sns.histplot(diff, bins=round(math.sqrt(diff.shape[0])), kde=True)
-    plt.show()
-    """
+    sns.set_context("talk")
+    # Create FacetGrid
+    g = sns.FacetGrid(
+        diff_df,
+        col="REL Error Bound",
+        height=4,
+        sharey=False,
+        sharex=False,
+        col_order=[0.5, 0.1, 0.05],
+    )
+    g.map(sns.histplot, "difference", bins=250, kde=True, stat="density")
+    g.set(xlabel="Error", ylabel="Density")
+
+    ax = g.axes
+    ax[0][0].set_xlim(-0.5, 0.5)
+    ax[0][1].set_xlim(-0.25, 0.25)
+    ax[0][2].set_xlim(-0.1, 0.1)
+    plt.savefig("model-difference.pdf")
 
     # Reasseble the model
     # Check if the reassembled model is the same shape as the original model
@@ -132,13 +147,13 @@ if __name__ == "__main__":
     # Config setup
     cfg = OmegaConf.structured(Config)
     cfg.compressed_weights_client = True
-    cfg.compressor = "ZFP"
+    cfg.compressor = "SZ2"
     cfg.lossless_compressor = "blosc"
     # cfg.compressor_lib_path = "/Users/grantwilkins/SZ3/build/sz3c/libSZ3c.dylib"
     cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
-    cfg.compressor_error_bound = 0.001
+    cfg.compressor_error_bound = 0.5
     cfg.compressor_error_mode = "REL"
-    compressors = ["zstd"]
+    compressors = ["blosc"]
     models_test = [
         models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1),
     ]

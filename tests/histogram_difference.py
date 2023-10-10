@@ -10,7 +10,7 @@ import pandas as pd
 import torchvision.models as models
 
 
-sns.set_context("paper")
+sns.set_context("talk")
 sns.set_style("whitegrid")
 plt.figure(figsize=(10, 4))
 
@@ -19,12 +19,23 @@ resnet_model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
 alexnet_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
 
 models_dict = {
-    "MobileNet-V2": mobilenet_model,
     "ResNet50": resnet_model,
     "AlexNet": alexnet_model,
+    "MobileNet-V2": mobilenet_model,
 }
-weights_data = []
 
+weights_data = []
+weights = flatten_model_params(mobilenet_model)
+
+state_dict = mobilenet_model.named_parameters()
+flattened_weights_mobilenet = np.concatenate(
+    [v.flatten().detach().cpu().numpy() for _, v in state_dict]
+)
+np.save("flattened_weights_mobilenet.bin", flattened_weights_mobilenet)
+
+
+np.savetxt("weights.txt", weights)
+flattened_weights = []
 for model_name, model in models_dict.items():
     state_dict = model.named_parameters()
     flattened_weights = np.concatenate(

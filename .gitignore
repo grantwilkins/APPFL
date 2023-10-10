@@ -3,6 +3,7 @@
 src/appfl/.DS_Store
 src/appfl/algorithm/mryu.py
 note
+examples/scripts/*
 trials
 examples/archive
 examples/output
