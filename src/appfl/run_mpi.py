@@ -17,7 +17,7 @@ from .misc import *
 from .algorithm import *
 
 from mpi4py import MPI
-
+from typing import Any
 import copy
 
 
@@ -29,6 +29,7 @@ def run_server(
     num_clients: int,
     test_dataset: Dataset = Dataset(),
     dataset_name: str = "appfl",
+    metric: Any = None
 ):
     """Run PPFL simulation server that aggregates and updates the global parameters of model
 
@@ -171,7 +172,7 @@ def run_server(
         cfg["logginginfo"]["GlobalUpdate_time"] = global_update_time
         validation_start = time.time()
         if cfg.validation == True:
-            test_loss, test_accuracy = validation(server, test_dataloader)
+            test_loss, test_accuracy = validation(server, test_dataloader, metric)
 
             if cfg.use_tensorboard:
                 # Add them to tensorboard
@@ -245,6 +246,7 @@ def run_client(
     num_clients: int,
     train_data: Dataset,
     test_data: Dataset = Dataset(),
+    metric: Any = None
 ):
     """Run PPFL simulation clients, each of which updates its own local parameters of model
 
@@ -325,6 +327,7 @@ def run_client(
             cfg,
             outfile[cid],
             test_dataloader,
+            metric,
             **cfg.fed.args,
         )
         for _, cid in enumerate(num_client_groups[comm_rank - 1])
