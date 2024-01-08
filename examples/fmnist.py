@@ -21,12 +21,12 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="mps")
+parser.add_argument("--device", type=str, default="cuda")
 
 ## dataset
 parser.add_argument("--dataset", type=str, default="FMNIST")
 parser.add_argument("--num_channel", type=int, default=1)
-parser.add_argument("--num_classes", type=int, default=62)
+parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=28)
 parser.add_argument("--model", type=str, default="AlexNetMNIST")
 
@@ -66,7 +66,7 @@ parser.add_argument(
     required=False,
     default=False,
 )
-parser.add_argument("--compressor", type=str, required=False, default="SZ3")
+parser.add_argument("--compressor", type=str, required=False, default="ZFP")
 parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
 parser.add_argument(
     "--pruning",
@@ -101,11 +101,17 @@ def get_data():
 
     # Load train data
     train_dataset = FashionMNIST(dir, download=True, train=True, transform=transform)
+    
+    train_length = len(train_dataset)
+    per_client_length = train_length // args.num_clients
+    remainder = train_length % args.num_clients
 
-    # Split train data for multiple clients
-    train_dataset_splits = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // args.num_clients] * args.num_clients
+    # The first 'remainder' splits have length 'per_client_length+1', the rest have length 'per_client_length'
+    lengths = [per_client_length + 1] * remainder + [per_client_length] * (
+        args.num_clients - remainder
     )
+    train_dataset_splits = torch.utils.data.random_split(train_dataset, lengths)
+
     return train_dataset_splits, test_dataset
 
 
@@ -118,7 +124,7 @@ def main():
     cfg = OmegaConf.structured(Config)
 
     ## Reproducibility
-    cfg.reproduce = True
+    cfg.reproduce = False
     if cfg.reproduce == True:
         set_seed(1)
 
@@ -126,12 +132,12 @@ def main():
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
     if args.compressor == "SZ2":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZ/build/sz/libSZ.so"
     elif args.compressor == "SZx":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZx-main/build/lib/libSZx.so"
     else:
         cfg.compressor_lib_path = (
-            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+            "/home/ac.gwilkins/SZ3/build/tools/sz3c/libSZ3c.so"
         )
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode

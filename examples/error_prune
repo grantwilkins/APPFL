@@ -1,0 +1,29 @@
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.900000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000000 --num_clients 1 --num_epochs 10 --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.950000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000000 --num_clients 1 --num_epochs 10 --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --pruning --pruning_threshold 0.990000 --model AlexNetCaltech

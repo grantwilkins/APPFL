@@ -5,13 +5,13 @@ algorithms.
 """
 import numpy as np
 
-error_bounds = [1e-1, 5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
+error_bounds = [1e-1, 1e-2,  1e-3,  1e-4,  1e-5]
 
 num_client = 1
 
-num_epochs = 10
+num_epochs = 25
 
-num_local_epochs = 5
+num_local_epochs = 1
 
 server_algorithm = "ServerFedAvg"
 
@@ -35,7 +35,7 @@ for model in models:
     )
     for error_bound in error_bounds:
         print(
-            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --model %s --federation_type %s --num_local_epochs %d"
+            "mpiexec -np %d python3 ./fmnist.py --server %s --error_bound %f --num_clients %d --num_epochs %d --compressed_client --model %s --federation_type %s --num_local_epochs %d --compressor SZ2"
             % (
                 num_client + 1,
                 server_algorithm,

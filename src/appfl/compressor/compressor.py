@@ -12,7 +12,6 @@ import scipy.sparse as sparse
 import zstd
 import torch.nn as nn
 import torch
-import xz
 import gzip
 import blosc
 
@@ -149,8 +148,6 @@ class Compressor:
                 lossless = b""
                 if self.lossless_compressor == "zstd":
                     lossless = zstd.compress(param_flat, 10)
-                elif self.lossless_compressor == "xz":
-                    lossless = xz.compress(param_flat.tobytes())
                 elif self.lossless_compressor == "gzip":
                     lossless = gzip.compress(param_flat.tobytes())
                 elif self.lossless_compressor == "zlib":
@@ -221,14 +218,12 @@ class Compressor:
                 else:
                     decomp_weights[name] = self.decompress(
                         cmp_data=decomp_weights[name],
-                        ori_shape=param.shape,
+                        ori_shape=(param.numel(),),
                         ori_dtype=np.float32,
                     )
             else:
                 if self.lossless_compressor == "zstd":
                     decomp_weights[name] = zstd.decompress(decomp_weights[name])
-                elif self.lossless_compressor == "xz":
-                    decomp_weights[name] = xz.decompress(decomp_weights[name])
                 elif self.lossless_compressor == "gzip":
                     decomp_weights[name] = gzip.decompress(decomp_weights[name])
                 elif self.lossless_compressor == "zlib":

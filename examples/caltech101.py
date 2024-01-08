@@ -23,7 +23,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="mps")
+parser.add_argument("--device", type=str, default="cuda")
 
 ## dataset
 parser.add_argument("--dataset", type=str, default="Caltech101")
@@ -67,7 +67,7 @@ parser.add_argument(
     required=False,
     default=False,
 )
-parser.add_argument("--compressor", type=str, required=False, default="SZ3")
+parser.add_argument("--compressor", type=str, required=False, default="ZFP")
 parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
 parser.add_argument(
     "--pruning",
@@ -135,20 +135,20 @@ def main():
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
     if args.compressor == "SZ2":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZ/build/sz/libSZ.so"
     elif args.compressor == "SZx":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZx-main/build/lib/libSZx.so"
     else:
         cfg.compressor_lib_path = (
-            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+            "/home/ac.gwilkins/SZ3/build/tools/sz3c/libSZ3c.so"
         )
     cfg.compressor_error_bound = args.error_bound
     cfg.compressor_error_mode = args.compressor_error_mode
     cfg.pruning = args.pruning
     cfg.pruning_threshold = args.pruning_threshold
-    cfg.reproduce = True
-    if cfg.reproduce == True:
-        set_seed(1)
+    cfg.reproduce = False
+    #if cfg.reproduce == True:
+        #set_seed(1)
     cfg.param_cutoff = int(args.param_cutoff)
     cfg.device = args.device
     cfg.num_clients = args.num_clients

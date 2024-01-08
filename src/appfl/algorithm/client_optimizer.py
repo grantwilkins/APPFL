@@ -168,7 +168,7 @@ class ClientOptim(BaseClient):
                     self.model.state_dict(),
                     os.path.join(path, "%s_%s.pt" % (self.round, t)),
                 )
-
+        end_local_time = time.time() - start_time
         """
         Pruning step
         """
@@ -238,6 +238,8 @@ class ClientOptim(BaseClient):
                 + str(flat_params.shape[0])
                 + ","
                 + str(compress_time)
+                + ","
+                + str(end_local_time)
                 + ","
                 + str(self.cfg.pruning)
                 + ","

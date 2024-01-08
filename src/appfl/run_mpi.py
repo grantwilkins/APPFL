@@ -50,7 +50,7 @@ def run_server(
         compressor = Compressor(cfg=cfg)
 
     # FIXME: I think it's ok for server to use cpu only.
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
 
     """ log for a server """
     logger = logging.getLogger(__name__)
@@ -263,7 +263,6 @@ def run_server(
 
     """ Summary """
     server.logging_summary(cfg, logger)
-
     do_continue = False
     do_continue = comm.bcast(do_continue, root=0)
 
@@ -317,7 +316,10 @@ def run_client(
 
     weight = None
     weight = comm.scatter(weight, root=0)
-
+    if "cuda" in cfg.device:
+        ## Check available GPUs if CUDA is used
+        num_gpu = torch.cuda.device_count()
+        clientpergpu = math.ceil(num_clients / num_gpu)
     batchsize = {}
     for _, cid in enumerate(num_client_groups[comm_rank - 1]):
         batchsize[cid] = cfg.train_data_batch_size
@@ -335,40 +337,44 @@ def run_client(
     else:
         cfg.validation = False
         test_dataloader = None
-
-    clients = [
-        eval(cfg.fed.clientname)(
-            cid,
-            weight[cid],
-            copy.deepcopy(model),
-            loss_fn,
-            DataLoader(
-                train_data[cid],
-                num_workers=cfg.num_workers,
-                batch_size=batchsize[cid],
-                shuffle=cfg.train_data_shuffle,
-                pin_memory=True,
-            ),
-            cfg,
-            outfile[cid],
-            test_dataloader,
-            **cfg.fed.args,
+    clients = []
+    for _, cid in enumerate(num_client_groups[comm_rank - 1]):
+        if "cuda" in cfg.device:
+            gpuindex = int(math.floor(cid / clientpergpu))
+            device = f"cuda:{gpuindex}"
+        else:
+            device = cfg.device
+        cfg.device = device
+        clients.append(
+            eval(cfg.fed.clientname)(
+                cid,
+                weight[cid],
+                copy.deepcopy(model),
+                loss_fn,
+                DataLoader(
+                    train_data[cid],
+                    num_workers=cfg.num_workers,
+                    batch_size=batchsize[cid],
+                    shuffle=cfg.train_data_shuffle,
+                    pin_memory=True,
+                ),
+                cfg,
+                outfile[cid],
+                test_dataloader,
+                **cfg.fed.args,
+            )
         )
-        for _, cid in enumerate(num_client_groups[comm_rank - 1])
-    ]
 
     do_continue = comm.bcast(None, root=0)
-    ori_shape = flatten_model_params(model=model).shape
     while do_continue:
         """Receive "global_state" """
         global_state = comm.bcast(None, root=0)
         if cfg.compressed_weights_server == True:
-            global_state = compressor.decompress(
-                cmp_data=global_state, ori_shape=ori_shape, ori_dtype=np.float32
-            )
-            global_state = utils.unflatten_model_params(
-                model=model, flat_params=global_state
-            )
+            global_state = compressor.decompress_model(
+                compressed_model=global_state,
+                model=model,
+                param_count_threshold=cfg.param_cutoff,
+            ).state_dict()
         """ Update "local_states" based on "global_state" """
         reqlist = []
         for client in clients:

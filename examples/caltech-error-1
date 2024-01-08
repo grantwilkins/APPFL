@@ -1,0 +1,31 @@
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000000 --num_clients 1 --num_epochs 10 --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --model ResNet50 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000000 --num_clients 1 --num_epochs 10 --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --model AlexNetCaltech --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000000 --num_clients 1 --num_epochs 10 --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.100000 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.050000 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.010000 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.005000 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.001000 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000500 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000100 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000050 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+mpiexec -np 2 python3 ./caltech101.py --server ServerFedAvg --error_bound 0.000010 --num_clients 1 --num_epochs 10 --compressed_client --model MobileNetV2 --federation_type Federated --num_local_epochs 1
+

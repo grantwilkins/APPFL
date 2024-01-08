@@ -30,14 +30,14 @@ from torchvision.models import alexnet
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--device", type=str, default="mps")
+parser.add_argument("--device", type=str, default="cuda")
 
 ## dataset and model
 parser.add_argument("--dataset", type=str, default="CIFAR10")
 parser.add_argument("--num_channel", type=int, default=3)
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--num_pixel", type=int, default=32)
-parser.add_argument("--model", type=str, default="MobileNetV2")
+parser.add_argument("--model", type=str, default="CNN")
 parser.add_argument("--pretrained", type=int, default=0)
 parser.add_argument("--train_data_batch_size", type=int, default=128)
 parser.add_argument("--test_data_batch_size", type=int, default=128)
@@ -76,7 +76,7 @@ parser.add_argument(
     required=False,
     default=False,
 )
-parser.add_argument("--compressor", type=str, required=False, default="SZ3")
+parser.add_argument("--compressor", type=str, required=False, default="ZFP")
 parser.add_argument("--compressor_error_mode", type=str, required=False, default="REL")
 parser.add_argument(
     "--pruning",
@@ -149,7 +149,7 @@ def main():
     comm_size = comm.Get_size()
 
     ## Reproducibility
-    set_seed(1)
+    #set_seed(1)
 
     """ Configuration """
     cfg = OmegaConf.structured(Config)
@@ -161,12 +161,12 @@ def main():
     cfg.compressed_weights_server = args.compressed_server
     cfg.compressor = args.compressor
     if args.compressor == "SZ2":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZ/build/sz/libSZ.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZ/build/sz/libSZ.so"
     elif args.compressor == "SZx":
-        cfg.compressor_lib_path = "/Users/grantwilkins/SZx-main/build/lib/libSZx.dylib"
+        cfg.compressor_lib_path = "/home/ac.gwilkins/SZx-main/build/lib/libSZx.so"
     else:
         cfg.compressor_lib_path = (
-            "/Users/grantwilkins/SZ3/build/tools/sz3c/libSZ3c.dylib"
+            "/home/ac.gwilkins/SZ3/build/tools/sz3c/libSZ3c.so"
         )
 
     cfg.compressor_error_bound = args.error_bound

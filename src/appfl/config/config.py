@@ -15,8 +15,8 @@ class Config:
     fed: Any = field(default_factory=Federated)
 
     # Compute device
-    device: str = "mps"
-    device_server: str = "mps"
+    device: str = "cuda"
+    device_server: str = "cuda"
 
     # Model
     model: str = "CNN"
