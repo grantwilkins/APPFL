@@ -1,0 +1,15 @@
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.010000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.001000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.000100 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.010000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.001000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.000100 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.010000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.001000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.000100 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.010000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.001000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.000100 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.010000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.001000 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
+mpiexec -np 2 python3 ./cifar10.py --num_clients 2 --error_bound 0.000100 --num_epochs 10 --compressed_client --model AlexNetCIFAR --compressor SZx
